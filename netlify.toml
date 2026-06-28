@@ -1,0 +1,23 @@
+# Netlify configuration for the Tamrin landing site
+
+[build]
+  publish = "."
+
+# Serve the Apple App Site Association file as JSON (required for Universal Links).
+[[headers]]
+  for = "/.well-known/apple-app-site-association"
+  [headers.values]
+    Content-Type = "application/json"
+    Cache-Control = "public, max-age=3600"
+
+# Long-cache static assets.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Event deep links: when opened without the app, show the branded fallback page (HTTP 200).
+[[redirects]]
+  from = "/event/*"
+  to = "/404.html"
+  status = 200
