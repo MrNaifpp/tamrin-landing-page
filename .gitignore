@@ -1,0 +1,8 @@
+# Test / tooling artifacts
+.playwright-mcp/
+*-hero.png
+*-full.png
+verify-*.png
+
+# OS
+.DS_Store

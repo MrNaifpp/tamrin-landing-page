@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تمرين — استضف وانضم لتمارين جماعية</title>
+  <meta name="description" content="تمرين: استضف تمارينك الجماعية المدفوعة أو انضم لتمارين قريبة منك وادفع بسهولة عبر STC Pay." />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              green:   '#1FA64D',
+              vivid:   '#2FBF4E',
+              light:   '#34C759',
+              deep:    '#15833C',
+              blue:    '#2F6BFF',
+              bluedeep:'#1E51D6',
+              ink:     '#0C1322',
+              muted:   '#5B6675',
+              soft:    '#F4F7F9',
+              line:    '#E7ECF1',
+            },
+          },
+          fontFamily: {
+            ar: ['Tajawal', 'system-ui', 'sans-serif'],
+            en: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            soft: '0 10px 40px -12px rgba(12,19,34,0.18)',
+            card: '0 8px 30px -10px rgba(12,19,34,0.12)',
+            glow: '0 20px 60px -15px rgba(47,191,78,0.45)',
+          },
+          borderRadius: { '4xl': '2rem' },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Tajawal', system-ui, sans-serif; }
+    html[lang="en"] body { font-family: 'Inter', system-ui, sans-serif; }
+
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
+    .reveal.in { opacity: 1; transform: none; }
+
+    /* Accordion */
+    .faq-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s ease; }
+    .faq-item.open .faq-body { grid-template-rows: 1fr; }
+    .faq-body > div { overflow: hidden; }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+    /* Decorative blobs */
+    .blob { filter: blur(60px); }
+
+    /* Phone screen scroll mask */
+    .feed-fade { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 88%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 88%, transparent); }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1 !important; transform: none !important; transition: none; }
+      * { animation: none !important; }
+    }
+
+    /* Marquee for testimonials on desktop is static; keep simple */
+    .lang-en-only { display: none; }
+    html[lang="en"] .lang-en-only { display: inline; }
+    html[lang="en"] .lang-ar-only { display: none; }
+
+    .focusable:focus-visible { outline: 3px solid #2F6BFF; outline-offset: 3px; border-radius: 8px; }
+  </style>
+</head>
+
+<body class="bg-white text-brand-ink antialiased selection:bg-brand-vivid/20">
+
+  <!-- Skip link -->
+  <a href="#hero" data-i18n="skip" class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-3 focus:start-3 focus:bg-brand-ink focus:text-white focus:px-4 focus:py-2 focus:rounded-lg">تخطَّ إلى المحتوى</a>
+
+  <!-- ===================== NAV ===================== -->
+  <header id="nav" class="fixed top-0 inset-x-0 z-50 transition-all duration-300">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6">
+      <nav id="navbar" class="mt-3 flex items-center justify-between gap-4 rounded-2xl border border-transparent bg-white/70 px-4 py-3 backdrop-blur-md transition-all duration-300">
+        <!-- Logo -->
+        <a href="#hero" class="flex items-center gap-2.5 focusable" aria-label="تمرين">
+          <img src="assets/tamrin-icon.png" alt="" class="h-10 w-10 rounded-[22%] shadow-sm" />
+          <span class="text-xl font-extrabold tracking-tight">تمرين</span>
+        </a>
+
+        <!-- Desktop links -->
+        <div class="hidden items-center gap-1 lg:flex">
+          <a href="#how" data-i18n="nav_how" class="rounded-lg px-3 py-2 text-sm font-bold text-brand-muted transition hover:text-brand-ink hover:bg-brand-soft focusable">كيف يعمل</a>
+          <a href="#features" data-i18n="nav_features" class="rounded-lg px-3 py-2 text-sm font-bold text-brand-muted transition hover:text-brand-ink hover:bg-brand-soft focusable">المميزات</a>
+          <a href="#trainers" data-i18n="nav_trainers" class="rounded-lg px-3 py-2 text-sm font-bold text-brand-muted transition hover:text-brand-ink hover:bg-brand-soft focusable">للمدرّبين</a>
+          <a href="#faq" data-i18n="nav_faq" class="rounded-lg px-3 py-2 text-sm font-bold text-brand-muted transition hover:text-brand-ink hover:bg-brand-soft focusable">الأسئلة الشائعة</a>
+        </div>
+
+        <!-- Right cluster -->
+        <div class="flex items-center gap-2">
+          <!-- Language toggle -->
+          <button id="langToggle" type="button" class="focusable inline-flex items-center gap-1.5 rounded-lg border border-brand-line px-3 py-2 text-sm font-bold text-brand-ink transition hover:bg-brand-soft" aria-label="Switch language">
+            <svg class="h-4 w-4 text-brand-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg>
+            <span data-i18n="lang_switch">EN</span>
+          </button>
+
+          <a href="#download" data-i18n="nav_cta" class="hidden sm:inline-flex items-center gap-2 rounded-xl bg-brand-green px-4 py-2.5 text-sm font-extrabold text-white shadow-soft transition hover:bg-brand-deep focusable">حمّل التطبيق</a>
+
+          <!-- Mobile menu button -->
+          <button id="menuBtn" type="button" class="focusable lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-brand-line text-brand-ink" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Mobile menu -->
+      <div id="mobileMenu" class="lg:hidden hidden mt-2 rounded-2xl border border-brand-line bg-white p-3 shadow-card">
+        <div class="flex flex-col">
+          <a href="#how" data-i18n="nav_how" class="rounded-lg px-4 py-3 font-bold text-brand-ink hover:bg-brand-soft focusable">كيف يعمل</a>
+          <a href="#features" data-i18n="nav_features" class="rounded-lg px-4 py-3 font-bold text-brand-ink hover:bg-brand-soft focusable">المميزات</a>
+          <a href="#trainers" data-i18n="nav_trainers" class="rounded-lg px-4 py-3 font-bold text-brand-ink hover:bg-brand-soft focusable">للمدرّبين</a>
+          <a href="#faq" data-i18n="nav_faq" class="rounded-lg px-4 py-3 font-bold text-brand-ink hover:bg-brand-soft focusable">الأسئلة الشائعة</a>
+          <a href="#download" data-i18n="nav_cta" class="mt-2 rounded-xl bg-brand-green px-4 py-3 text-center font-extrabold text-white focusable">حمّل التطبيق</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===================== HERO ===================== -->
+    <section id="hero" class="relative overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-24">
+      <!-- background -->
+      <div class="pointer-events-none absolute inset-0 -z-10">
+        <div class="absolute inset-0 bg-gradient-to-b from-brand-soft to-white"></div>
+        <div class="blob absolute -top-24 start-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-brand-vivid/30"></div>
+        <div class="blob absolute top-40 end-[-4rem] h-72 w-72 rounded-full bg-brand-blue/20"></div>
+      </div>
+
+      <div class="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 sm:px-6 lg:grid-cols-2">
+        <!-- Copy -->
+        <div class="reveal text-center lg:text-start">
+          <span class="inline-flex items-center gap-2 rounded-full border border-brand-green/30 bg-brand-green/10 px-4 py-1.5 text-sm font-bold text-brand-deep">
+            <span class="h-2 w-2 rounded-full bg-brand-vivid"></span>
+            <span data-i18n="hero_badge">تمارين جماعية في مكان واحد</span>
+          </span>
+
+          <h1 class="mt-6 text-4xl font-black leading-[1.15] tracking-tight sm:text-5xl lg:text-6xl">
+            <span data-i18n="hero_title_1">استضف تمرينك.</span>
+            <span class="text-brand-green" data-i18n="hero_title_2">انضم. تمرّن.</span>
+          </h1>
+
+          <p class="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-brand-muted lg:mx-0" data-i18n="hero_sub">
+            منصة عربية لاستضافة التمارين الجماعية المدفوعة والانضمام إليها. حدّد الوقت والمكان والسعر، وادفع بسهولة عبر STC Pay — بدون تعقيد.
+          </p>
+
+          <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start" id="download">
+            <!-- App Store badge placeholder -->
+            <a href="#" class="focusable inline-flex items-center gap-3 rounded-2xl bg-brand-ink px-5 py-3 text-white transition hover:opacity-90">
+              <svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.42 2.2-1.12 2.98-.84.94-2.2 1.66-3.34 1.57-.13-1.12.43-2.3 1.1-3.03.78-.86 2.16-1.5 3.36-1.52zM20.5 17.2c-.6 1.38-.88 2-1.66 3.22-1.08 1.7-2.6 3.82-4.48 3.84-1.67.02-2.1-1.1-4.37-1.08-2.27.01-2.74 1.1-4.42 1.07-1.88-.03-3.32-1.94-4.4-3.64-3.02-4.77-3.34-10.36-1.47-13.33 1.32-2.1 3.42-3.34 5.39-3.34 2.01 0 3.27 1.1 4.93 1.1 1.61 0 2.59-1.1 4.92-1.1 1.76 0 3.62.96 4.95 2.62-4.35 2.38-3.64 8.58.01 10.54z"/></svg>
+              <span class="text-start leading-none">
+                <span class="block text-[11px] font-medium opacity-80" data-i18n="badge_top">حمّله من</span>
+                <span class="mt-1 block text-lg font-bold" data-i18n="badge_store">App Store</span>
+              </span>
+            </a>
+            <a href="#how" class="focusable inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-line bg-white px-5 py-3.5 font-bold text-brand-ink transition hover:bg-brand-soft" data-i18n="hero_secondary">كيف يعمل؟</a>
+          </div>
+
+          <!-- mini trust -->
+          <div class="mt-8 flex items-center justify-center gap-6 text-sm text-brand-muted lg:justify-start">
+            <div class="flex items-center gap-2"><svg class="h-5 w-5 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="hero_trust_1">دفع عبر STC Pay</span></div>
+            <div class="flex items-center gap-2"><svg class="h-5 w-5 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="hero_trust_2">بدون بطاقات</span></div>
+          </div>
+        </div>
+
+        <!-- Phone mockup -->
+        <div class="reveal flex justify-center lg:justify-end">
+          <div class="relative">
+            <div class="absolute -inset-6 -z-10 rounded-[3rem] bg-brand-vivid/20 blur-2xl"></div>
+            <!-- Device -->
+            <div class="relative mx-auto h-[560px] w-[280px] rounded-[2.8rem] border-[10px] border-brand-ink bg-brand-ink shadow-glow">
+              <!-- notch -->
+              <div class="absolute start-1/2 top-0 z-20 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-brand-ink"></div>
+              <!-- screen (live app: «القادمة» feed) -->
+              <div class="relative h-full w-full overflow-hidden rounded-[2.1rem] bg-[#0c1730]">
+                <!-- app top bar -->
+                <div class="flex items-center justify-between px-4 pb-4 pt-9">
+                  <h3 class="text-2xl font-black text-white">القادمة</h3>
+                  <div class="flex items-center gap-2 rounded-2xl bg-white/10 px-2.5 py-1.5 ring-1 ring-white/10">
+                    <svg class="h-5 w-5 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                    <span class="h-4 w-px bg-white/15"></span>
+                    <svg class="h-5 w-5 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+                  </div>
+                </div>
+
+                <!-- featured event card -->
+                <div class="px-4">
+                  <div class="relative h-[384px] overflow-hidden rounded-[1.75rem] ring-1 ring-white/10"
+                       style="background-color:#15294f; background-image: linear-gradient(rgba(120,165,255,.13) 1px, transparent 1px), linear-gradient(90deg, rgba(120,165,255,.13) 1px, transparent 1px); background-size: 24px 24px;">
+                    <!-- ambient glow -->
+                    <div class="absolute inset-0" style="background:radial-gradient(120% 80% at 50% 0%, rgba(70,120,210,.40), transparent 60%);"></div>
+                    <!-- blueprint motif: scattered balls + goalpost line -->
+                    <div class="absolute end-6 top-0 h-full w-px bg-white/10"></div>
+                    <span class="absolute start-6 top-10 text-2xl opacity-25">⚽</span>
+                    <span class="absolute end-10 top-16 text-xl opacity-20">⚽</span>
+                    <span class="absolute start-1/2 top-6 -translate-x-1/2 text-base opacity-15">⚽</span>
+                    <!-- athletes hint -->
+                    <svg class="absolute bottom-10 start-1/2 h-44 w-auto -translate-x-1/2 text-white/10" viewBox="0 0 64 40" fill="currentColor">
+                      <g><circle cx="12" cy="8" r="4"/><rect x="7" y="13" width="10" height="20" rx="3"/></g>
+                      <g><circle cx="26" cy="6" r="4"/><rect x="21" y="11" width="10" height="23" rx="3"/></g>
+                      <g><circle cx="40" cy="8" r="4"/><rect x="35" y="13" width="10" height="21" rx="3"/></g>
+                      <g><circle cx="54" cy="7" r="4"/><rect x="49" y="12" width="10" height="22" rx="3"/></g>
+                    </svg>
+                    <!-- bottom legibility gradient -->
+                    <div class="absolute inset-x-0 bottom-0 h-2/3" style="background:linear-gradient(to top, #0a142b 8%, rgba(10,20,43,.7) 45%, transparent);"></div>
+                    <!-- title + date -->
+                    <div class="absolute inset-x-0 bottom-0 p-5 text-center">
+                      <h4 class="text-lg font-black text-white">التمرين الأسبوعي</h4>
+                      <p class="mt-1.5 text-sm font-medium text-white/70">2026/06/30 · 7:10 ص</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- peek of next card -->
+                <div class="px-4 pt-3">
+                  <div class="h-14 rounded-2xl ring-1 ring-white/10 opacity-70"
+                       style="background-color:#15294f; background-image: linear-gradient(rgba(120,165,255,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(120,165,255,.10) 1px, transparent 1px); background-size: 20px 20px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== HOW IT WORKS ===================== -->
+    <section id="how" class="py-20 sm:py-28">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6">
+        <div class="reveal mx-auto max-w-2xl text-center">
+          <p class="text-sm font-extrabold uppercase tracking-wider text-brand-green" data-i18n="how_kicker">بثلاث خطوات</p>
+          <h2 class="mt-3 text-3xl font-black sm:text-4xl" data-i18n="how_title">كيف يعمل</h2>
+          <p class="mt-4 text-lg text-brand-muted" data-i18n="how_sub">من التصفّح إلى التمرين في دقائق.</p>
+        </div>
+
+        <div class="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
+          <!-- step 1 -->
+          <div class="reveal relative rounded-3xl border border-brand-line bg-white p-7 shadow-card">
+            <span class="absolute top-6 end-6 text-5xl font-black text-brand-soft">١</span>
+            <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-green/12 text-brand-green">
+              <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+            <h3 class="mt-5 text-xl font-extrabold" data-i18n="how_1_t">تصفّح</h3>
+            <p class="mt-2 text-brand-muted" data-i18n="how_1_d">استكشف التمارين القريبة منك حسب الوقت والمكان والسعر.</p>
+          </div>
+          <!-- step 2 -->
+          <div class="reveal relative rounded-3xl border border-brand-line bg-white p-7 shadow-card">
+            <span class="absolute top-6 end-6 text-5xl font-black text-brand-soft">٢</span>
+            <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-blue/12 text-brand-blue">
+              <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+            </div>
+            <h3 class="mt-5 text-xl font-extrabold" data-i18n="how_2_t">انضم وادفع</h3>
+            <p class="mt-2 text-brand-muted" data-i18n="how_2_d">احجز مكانك وادفع عبر STC Pay، ثم اضغط «أرسلت المبلغ».</p>
+          </div>
+          <!-- step 3 -->
+          <div class="reveal relative rounded-3xl border border-brand-line bg-white p-7 shadow-card">
+            <span class="absolute top-6 end-6 text-5xl font-black text-brand-soft">٣</span>
+            <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-green/12 text-brand-green">
+              <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5 17.5 17.5M3 12l3-3 9 9-3 3zM12 3l3 3M18 9l3 3"/></svg>
+            </div>
+            <h3 class="mt-5 text-xl font-extrabold" data-i18n="how_3_t">تمرّن</h3>
+            <p class="mt-2 text-brand-muted" data-i18n="how_3_d">احضر تمرينك مع التذكيرات التلقائية ولا تفوّت موعدك.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FEATURES ===================== -->
+    <section id="features" class="bg-brand-soft py-20 sm:py-28">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6">
+        <div class="reveal mx-auto max-w-2xl text-center">
+          <p class="text-sm font-extrabold uppercase tracking-wider text-brand-green" data-i18n="feat_kicker">كل ما تحتاجه</p>
+          <h2 class="mt-3 text-3xl font-black sm:text-4xl" data-i18n="feat_title">مميزات تصنع الفرق</h2>
+        </div>
+
+        <div class="mt-16 space-y-16 sm:space-y-24">
+          <!-- Feature 1: Host -->
+          <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <div class="reveal">
+              <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-green/12 text-brand-green">
+                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M12 14v4M10 16h4"/></svg>
+              </div>
+              <h3 class="mt-5 text-2xl font-black sm:text-3xl" data-i18n="f1_t">استضف تمرينك</h3>
+              <p class="mt-4 text-lg leading-relaxed text-brand-muted" data-i18n="f1_d">أنشئ تمرينًا مدفوعًا في ثوانٍ: حدّد الوقت والمكان والسعر والسعة ووقت الانتهاء. تختفي التمارين تلقائيًا بمجرد انتهائها.</p>
+              <ul class="mt-5 space-y-2.5">
+                <li class="flex items-center gap-2.5 text-brand-ink"><svg class="h-5 w-5 shrink-0 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="f1_p1">تحكّم كامل بالسعر والسعة</span></li>
+                <li class="flex items-center gap-2.5 text-brand-ink"><svg class="h-5 w-5 shrink-0 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="f1_p2">وقت انتهاء إلزامي وإخفاء تلقائي</span></li>
+              </ul>
+            </div>
+            <div class="reveal order-first lg:order-last">
+              <div class="rounded-3xl border border-brand-line bg-white p-6 shadow-card">
+                <p class="text-sm font-bold text-brand-muted" data-i18n="f1_card_title">إنشاء تمرين</p>
+                <div class="mt-4 space-y-3">
+                  <div class="flex items-center justify-between rounded-xl bg-brand-soft px-4 py-3"><span class="text-sm text-brand-muted" data-i18n="f1_row1">الوقت</span><span class="text-sm font-bold">٧:٠٠ ص</span></div>
+                  <div class="flex items-center justify-between rounded-xl bg-brand-soft px-4 py-3"><span class="text-sm text-brand-muted" data-i18n="f1_row2">المكان</span><span class="text-sm font-bold">حي النخيل</span></div>
+                  <div class="flex items-center justify-between rounded-xl bg-brand-soft px-4 py-3"><span class="text-sm text-brand-muted" data-i18n="f1_row3">السعر</span><span class="text-sm font-bold text-brand-deep">٥٠ ﷼</span></div>
+                  <div class="flex items-center justify-between rounded-xl bg-brand-soft px-4 py-3"><span class="text-sm text-brand-muted" data-i18n="f1_row4">السعة</span><span class="text-sm font-bold">١٢ مشارك</span></div>
+                  <button class="w-full rounded-xl bg-brand-green py-3 font-extrabold text-white" data-i18n="f1_card_btn">نشر التمرين</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 2: Pay (STC Pay) -->
+          <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <div class="reveal order-first">
+              <div class="rounded-3xl border border-brand-line bg-white p-6 shadow-card">
+                <p class="text-sm font-bold text-brand-muted" data-i18n="f2_card_title">إتمام الدفع</p>
+                <div class="mt-4 rounded-2xl bg-brand-soft p-4 text-center">
+                  <p class="text-xs text-brand-muted" data-i18n="f2_amount_l">المبلغ المطلوب</p>
+                  <p class="mt-1 text-3xl font-black text-brand-ink">٥٠ <span class="text-lg">﷼</span></p>
+                  <p class="mt-1 text-xs text-brand-muted" data-i18n="f2_via">عبر STC Pay</p>
+                </div>
+                <button class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-blue py-3 font-extrabold text-white" data-i18n="f2_btn1">أرسلت المبلغ</button>
+                <div class="mt-3 flex items-center justify-center gap-2 rounded-xl bg-brand-green/10 py-2.5 text-sm font-bold text-brand-deep">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+                  <span data-i18n="f2_status">بانتظار تأكيد المضيف</span>
+                </div>
+              </div>
+            </div>
+            <div class="reveal">
+              <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-blue/12 text-brand-blue">
+                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>
+              </div>
+              <h3 class="mt-5 text-2xl font-black sm:text-3xl" data-i18n="f2_t">انضم وادفع بسهولة</h3>
+              <p class="mt-4 text-lg leading-relaxed text-brand-muted" data-i18n="f2_d">ادفع عبر STC Pay واضغط «أرسلت المبلغ»، ثم يؤكّد المضيف أو يرفض. نظام قائم على الثقة، بدون احتكاك البطاقات.</p>
+              <ul class="mt-5 space-y-2.5">
+                <li class="flex items-center gap-2.5 text-brand-ink"><svg class="h-5 w-5 shrink-0 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="f2_p1">تأكيد أو رفض فوري من المضيف</span></li>
+                <li class="flex items-center gap-2.5 text-brand-ink"><svg class="h-5 w-5 shrink-0 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="f2_p2">بدون إدخال بيانات بطاقات</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Feature 3: Friends -->
+          <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <div class="reveal">
+              <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-green/12 text-brand-green">
+                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <h3 class="mt-5 text-2xl font-black sm:text-3xl" data-i18n="f3_t">أضف أصدقاءك</h3>
+              <p class="mt-4 text-lg leading-relaxed text-brand-muted" data-i18n="f3_d">أحضر أصدقاءك معك: أضف مشاركين ضيوف إلى حجزك ضمن دفعة واحدة، بدون حاجة لحسابات منفصلة.</p>
+              <ul class="mt-5 space-y-2.5">
+                <li class="flex items-center gap-2.5 text-brand-ink"><svg class="h-5 w-5 shrink-0 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="f3_p1">دفعة واحدة لكل المجموعة</span></li>
+                <li class="flex items-center gap-2.5 text-brand-ink"><svg class="h-5 w-5 shrink-0 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="f3_p2">بدون حسابات إضافية للضيوف</span></li>
+              </ul>
+            </div>
+            <div class="reveal order-first lg:order-last">
+              <div class="rounded-3xl border border-brand-line bg-white p-6 shadow-card">
+                <p class="text-sm font-bold text-brand-muted" data-i18n="f3_card_title">المشاركون في حجزك</p>
+                <div class="mt-4 space-y-2.5">
+                  <div class="flex items-center justify-between rounded-xl bg-brand-soft px-3 py-2.5"><div class="flex items-center gap-2.5"><span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-green/15 font-bold text-brand-deep">أ</span><span class="text-sm font-bold" data-i18n="f3_me">أنت</span></div><span class="text-[11px] font-bold text-brand-deep" data-i18n="f3_host_tag">صاحب الحجز</span></div>
+                  <div class="flex items-center justify-between rounded-xl bg-brand-soft px-3 py-2.5"><div class="flex items-center gap-2.5"><span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-blue/15 font-bold text-brand-blue">م</span><span class="text-sm font-bold" data-i18n="f3_g1">محمد (ضيف)</span></div><svg class="h-4 w-4 text-brand-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+                  <div class="flex items-center justify-between rounded-xl bg-brand-soft px-3 py-2.5"><div class="flex items-center gap-2.5"><span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-blue/15 font-bold text-brand-blue">س</span><span class="text-sm font-bold" data-i18n="f3_g2">سارة (ضيف)</span></div><svg class="h-4 w-4 text-brand-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+                  <button class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-line py-2.5 text-sm font-bold text-brand-muted"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="f3_add">أضف صديقًا</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 4: Reminders -->
+          <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <div class="reveal order-first">
+              <div class="rounded-3xl border border-brand-line bg-white p-6 shadow-card">
+                <div class="flex items-start gap-3 rounded-2xl bg-brand-ink p-4 text-white">
+                  <img src="assets/tamrin-icon.png" alt="" class="h-10 w-10 rounded-[22%]" />
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between"><span class="text-sm font-bold">تمرين</span><span class="text-[11px] opacity-70" data-i18n="f4_now">الآن</span></div>
+                    <p class="mt-1 text-sm opacity-90" data-i18n="f4_notif">تذكير: تمرين «كروسفت صباحي» يبدأ بعد ساعة في حي النخيل 🏋️</p>
+                  </div>
+                </div>
+                <div class="mt-3 flex items-start gap-3 rounded-2xl bg-brand-soft p-4">
+                  <span class="inline-flex h-10 w-10 items-center justify-center rounded-[22%] bg-brand-green/15 text-brand-green"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+                  <div class="flex-1"><div class="flex items-center justify-between"><span class="text-sm font-bold" data-i18n="f4_t2">تمرين</span><span class="text-[11px] text-brand-muted" data-i18n="f4_yest">أمس</span></div><p class="mt-1 text-sm text-brand-muted" data-i18n="f4_notif2">لا تنسَ تمرين الغد في تمام ٦:٣٠ مساءً ⏰</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="reveal">
+              <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-blue/12 text-brand-blue">
+                <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+              </div>
+              <h3 class="mt-5 text-2xl font-black sm:text-3xl" data-i18n="f4_t">تذكيرات تلقائية</h3>
+              <p class="mt-4 text-lg leading-relaxed text-brand-muted" data-i18n="f4_d">تذكيرات تلقائية قبل التمارين القادمة حتى لا يفوّت أحد موعده. ابقَ ملتزمًا دون عناء.</p>
+              <ul class="mt-5 space-y-2.5">
+                <li class="flex items-center gap-2.5 text-brand-ink"><svg class="h-5 w-5 shrink-0 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="f4_p1">إشعارات قبل بدء التمرين</span></li>
+                <li class="flex items-center gap-2.5 text-brand-ink"><svg class="h-5 w-5 shrink-0 text-brand-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="f4_p2">تنبيهات للمضيف والمشاركين</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FOR TRAINERS ===================== -->
+    <section id="trainers" class="py-20 sm:py-28">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6">
+        <div class="reveal relative overflow-hidden rounded-[2.5rem] bg-brand-ink px-6 py-14 sm:px-12 sm:py-20">
+          <div class="pointer-events-none absolute inset-0 -z-0">
+            <div class="blob absolute -top-16 end-0 h-64 w-64 rounded-full bg-brand-green/30"></div>
+            <div class="blob absolute -bottom-20 start-10 h-64 w-64 rounded-full bg-brand-blue/25"></div>
+          </div>
+          <div class="relative grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <div class="text-white">
+              <p class="text-sm font-extrabold uppercase tracking-wider text-brand-light" data-i18n="tr_kicker">للمدرّبين والمنظّمين</p>
+              <h2 class="mt-3 text-3xl font-black leading-tight sm:text-4xl" data-i18n="tr_title">حوّل تمارينك إلى دخل</h2>
+              <p class="mt-4 max-w-lg text-lg leading-relaxed text-white/70" data-i18n="tr_sub">أنشئ جلسات مدفوعة، أدِر السعة والمدفوعات، وابنِ مجتمعك الرياضي — كل ذلك من تطبيق واحد.</p>
+              <a href="#download" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-brand-green px-6 py-3.5 font-extrabold text-white transition hover:bg-brand-deep focusable" data-i18n="tr_cta">ابدأ كمضيف</a>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="rounded-2xl bg-white/10 p-5 backdrop-blur-sm"><p class="text-3xl font-black text-white">١٠٠٪</p><p class="mt-1 text-sm text-white/70" data-i18n="tr_s1">تحكّم بالتسعير</p></div>
+              <div class="rounded-2xl bg-white/10 p-5 backdrop-blur-sm"><p class="text-3xl font-black text-white">٠</p><p class="mt-1 text-sm text-white/70" data-i18n="tr_s2">رسوم إعداد</p></div>
+              <div class="rounded-2xl bg-white/10 p-5 backdrop-blur-sm"><p class="text-3xl font-black text-white">STC</p><p class="mt-1 text-sm text-white/70" data-i18n="tr_s3">مدفوعات سهلة</p></div>
+              <div class="rounded-2xl bg-white/10 p-5 backdrop-blur-sm"><p class="text-3xl font-black text-white">∞</p><p class="mt-1 text-sm text-white/70" data-i18n="tr_s4">عدد التمارين</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TESTIMONIALS ===================== -->
+    <section id="testimonials" class="bg-brand-soft py-20 sm:py-28">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6">
+        <div class="reveal mx-auto max-w-2xl text-center">
+          <p class="text-sm font-extrabold uppercase tracking-wider text-brand-green" data-i18n="ts_kicker">قصص حقيقية</p>
+          <h2 class="mt-3 text-3xl font-black sm:text-4xl" data-i18n="ts_title">يحبّه المجتمع الرياضي</h2>
+        </div>
+        <div class="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
+          <!-- t1 -->
+          <figure class="reveal rounded-3xl border border-brand-line bg-white p-7 shadow-card">
+            <div class="flex gap-1 text-brand-light" aria-hidden="true">★★★★★</div>
+            <blockquote class="mt-4 text-brand-ink" data-i18n="ts_1_q">«صرت أنظّم تمارين الكروسفت وأستقبل المدفوعات بدون أي تعقيد. وفّر علي وقت كثير.»</blockquote>
+            <figcaption class="mt-5 flex items-center gap-3">
+              <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-green/15 font-bold text-brand-deep">ف</span>
+              <span><span class="block font-extrabold" data-i18n="ts_1_n">فهد العتيبي</span><span class="block text-sm text-brand-muted" data-i18n="ts_1_r">مدرب كروسفت</span></span>
+            </figcaption>
+          </figure>
+          <!-- t2 -->
+          <figure class="reveal rounded-3xl border border-brand-line bg-white p-7 shadow-card">
+            <div class="flex gap-1 text-brand-light" aria-hidden="true">★★★★★</div>
+            <blockquote class="mt-4 text-brand-ink" data-i18n="ts_2_q">«أحجز تمارين اليوغا قريب مني وأدفع بثوانٍ عبر STC Pay. تجربة مريحة جدًا.»</blockquote>
+            <figcaption class="mt-5 flex items-center gap-3">
+              <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-blue/15 font-bold text-brand-blue">ن</span>
+              <span><span class="block font-extrabold" data-i18n="ts_2_n">نورة القحطاني</span><span class="block text-sm text-brand-muted" data-i18n="ts_2_r">مشتركة</span></span>
+            </figcaption>
+          </figure>
+          <!-- t3 -->
+          <figure class="reveal rounded-3xl border border-brand-line bg-white p-7 shadow-card">
+            <div class="flex gap-1 text-brand-light" aria-hidden="true">★★★★★</div>
+            <blockquote class="mt-4 text-brand-ink" data-i18n="ts_3_q">«أضيف أصحابي للحجز بدفعة واحدة، ونروح نتمرّن جماعة. فكرة رهيبة!»</blockquote>
+            <figcaption class="mt-5 flex items-center gap-3">
+              <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-green/15 font-bold text-brand-deep">ع</span>
+              <span><span class="block font-extrabold" data-i18n="ts_3_n">عبدالله الشمري</span><span class="block text-sm text-brand-muted" data-i18n="ts_3_r">مشترك</span></span>
+            </figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FAQ ===================== -->
+    <section id="faq" class="py-20 sm:py-28">
+      <div class="mx-auto max-w-3xl px-4 sm:px-6">
+        <div class="reveal text-center">
+          <p class="text-sm font-extrabold uppercase tracking-wider text-brand-green" data-i18n="faq_kicker">أسئلة شائعة</p>
+          <h2 class="mt-3 text-3xl font-black sm:text-4xl" data-i18n="faq_title">كل ما تريد معرفته</h2>
+        </div>
+
+        <div class="mt-12 space-y-3" id="faqList">
+          <!-- item template repeated -->
+          <div class="faq-item rounded-2xl border border-brand-line bg-white">
+            <button type="button" class="faq-btn focusable flex w-full items-center justify-between gap-4 px-5 py-4 text-start" aria-expanded="false">
+              <span class="font-extrabold" data-i18n="faq_1_q">كيف تتم عملية الدفع؟</span>
+              <svg class="faq-chevron h-5 w-5 shrink-0 text-brand-muted transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="faq-body"><div><p class="px-5 pb-5 text-brand-muted" data-i18n="faq_1_a">تدفع مباشرة للمضيف عبر STC Pay، ثم تضغط «أرسلت المبلغ». يؤكّد المضيف استلام المبلغ ليُعتمد حجزك. نظام قائم على الثقة وبدون احتكاك البطاقات.</p></div></div>
+          </div>
+
+          <div class="faq-item rounded-2xl border border-brand-line bg-white">
+            <button type="button" class="faq-btn focusable flex w-full items-center justify-between gap-4 px-5 py-4 text-start" aria-expanded="false">
+              <span class="font-extrabold" data-i18n="faq_2_q">ماذا عن الاسترداد والإلغاء؟</span>
+              <svg class="faq-chevron h-5 w-5 shrink-0 text-brand-muted transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="faq-body"><div><p class="px-5 pb-5 text-brand-muted" data-i18n="faq_2_a">يتم الاسترداد بالتنسيق المباشر بين المشارك والمضيف، حيث تتم المدفوعات بينهما عبر STC Pay. ننصح المضيفين بتوضيح سياسة الإلغاء في وصف التمرين.</p></div></div>
+          </div>
+
+          <div class="faq-item rounded-2xl border border-brand-line bg-white">
+            <button type="button" class="faq-btn focusable flex w-full items-center justify-between gap-4 px-5 py-4 text-start" aria-expanded="false">
+              <span class="font-extrabold" data-i18n="faq_3_q">هل أستطيع إضافة أصدقائي؟</span>
+              <svg class="faq-chevron h-5 w-5 shrink-0 text-brand-muted transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="faq-body"><div><p class="px-5 pb-5 text-brand-muted" data-i18n="faq_3_a">نعم، يمكنك إضافة مشاركين ضيوف إلى حجزك ضمن دفعة واحدة دون الحاجة لإنشاء حسابات منفصلة لهم.</p></div></div>
+          </div>
+
+          <div class="faq-item rounded-2xl border border-brand-line bg-white">
+            <button type="button" class="faq-btn focusable flex w-full items-center justify-between gap-4 px-5 py-4 text-start" aria-expanded="false">
+              <span class="font-extrabold" data-i18n="faq_4_q">هل تصلني تذكيرات قبل التمرين؟</span>
+              <svg class="faq-chevron h-5 w-5 shrink-0 text-brand-muted transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="faq-body"><div><p class="px-5 pb-5 text-brand-muted" data-i18n="faq_4_a">بالتأكيد. يرسل التطبيق تذكيرات تلقائية قبل بدء التمارين القادمة لكل من المضيف والمشاركين حتى لا يفوّت أحد موعده.</p></div></div>
+          </div>
+
+          <div class="faq-item rounded-2xl border border-brand-line bg-white">
+            <button type="button" class="faq-btn focusable flex w-full items-center justify-between gap-4 px-5 py-4 text-start" aria-expanded="false">
+              <span class="font-extrabold" data-i18n="faq_5_q">هل يحتاج المضيف لرسوم اشتراك؟</span>
+              <svg class="faq-chevron h-5 w-5 shrink-0 text-brand-muted transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="faq-body"><div><p class="px-5 pb-5 text-brand-muted" data-i18n="faq_5_a">لا توجد رسوم إعداد للبدء. أنشئ تمرينك، حدّد سعرك، وابدأ باستقبال المشاركين فورًا.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== DOWNLOAD CTA ===================== -->
+    <section class="px-4 pb-20 sm:px-6">
+      <div class="reveal mx-auto max-w-5xl overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-green to-brand-deep px-6 py-14 text-center sm:py-20">
+        <img src="assets/tamrin-icon.png" alt="" class="mx-auto h-16 w-16 rounded-[22%] shadow-lg" />
+        <h2 class="mt-6 text-3xl font-black text-white sm:text-4xl" data-i18n="cta_title">جاهز تبدأ تمرينك؟</h2>
+        <p class="mx-auto mt-3 max-w-xl text-lg text-white/85" data-i18n="cta_sub">حمّل تطبيق تمرين الآن وانضم لمجتمع رياضي ينمو كل يوم.</p>
+        <div class="mt-8 flex justify-center">
+          <a href="#" class="focusable inline-flex items-center gap-3 rounded-2xl bg-white px-6 py-3.5 text-brand-ink transition hover:bg-brand-soft">
+            <svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.42 2.2-1.12 2.98-.84.94-2.2 1.66-3.34 1.57-.13-1.12.43-2.3 1.1-3.03.78-.86 2.16-1.5 3.36-1.52zM20.5 17.2c-.6 1.38-.88 2-1.66 3.22-1.08 1.7-2.6 3.82-4.48 3.84-1.67.02-2.1-1.1-4.37-1.08-2.27.01-2.74 1.1-4.42 1.07-1.88-.03-3.32-1.94-4.4-3.64-3.02-4.77-3.34-10.36-1.47-13.33 1.32-2.1 3.42-3.34 5.39-3.34 2.01 0 3.27 1.1 4.93 1.1 1.61 0 2.59-1.1 4.92-1.1 1.76 0 3.62.96 4.95 2.62-4.35 2.38-3.64 8.58.01 10.54z"/></svg>
+            <span class="text-start leading-none"><span class="block text-[11px] font-medium opacity-70" data-i18n="badge_top">حمّله من</span><span class="mt-1 block text-lg font-bold" data-i18n="badge_store">App Store</span></span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="bg-brand-ink text-white/80">
+    <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+      <div class="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
+        <div class="col-span-2 lg:col-span-2">
+          <div class="flex items-center gap-2.5">
+            <img src="assets/tamrin-icon.png" alt="" class="h-10 w-10 rounded-[22%]" />
+            <span class="text-xl font-extrabold text-white">تمرين</span>
+          </div>
+          <p class="mt-4 max-w-xs text-sm text-white/60" data-i18n="ft_about">منصة عربية لاستضافة التمارين الجماعية المدفوعة والانضمام إليها بسهولة.</p>
+          <div class="mt-5 flex items-center gap-3">
+            <a href="#" aria-label="X (Twitter)" class="focusable inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 transition hover:bg-white/20"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.5 8.57L22.5 22h-6.6l-5.16-6.74L4.8 22H1.54l8.02-9.17L1.5 2h6.77l4.66 6.16zM17.1 20.05h1.8L7.02 3.84H5.1z"/></svg></a>
+            <a href="#" aria-label="Instagram" class="focusable inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 transition hover:bg-white/20"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="#" aria-label="TikTok" class="focusable inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 transition hover:bg-white/20"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M16 2c.3 2.3 1.8 4.2 4 4.6v3.1c-1.5.1-2.9-.3-4-1v6.1A6.3 6.3 0 1 1 9.7 8.5v3.3a3 3 0 1 0 2.1 2.9V2z"/></svg></a>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-extrabold text-white" data-i18n="ft_product">المنتج</h3>
+          <ul class="mt-4 space-y-3 text-sm">
+            <li><a href="#how" class="transition hover:text-white focusable" data-i18n="nav_how">كيف يعمل</a></li>
+            <li><a href="#features" class="transition hover:text-white focusable" data-i18n="nav_features">المميزات</a></li>
+            <li><a href="#trainers" class="transition hover:text-white focusable" data-i18n="nav_trainers">للمدرّبين</a></li>
+            <li><a href="#download" class="transition hover:text-white focusable" data-i18n="nav_cta">حمّل التطبيق</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-extrabold text-white" data-i18n="ft_support">الدعم</h3>
+          <ul class="mt-4 space-y-3 text-sm">
+            <li><a href="#faq" class="transition hover:text-white focusable" data-i18n="nav_faq">الأسئلة الشائعة</a></li>
+            <li><a href="mailto:hello@tamrin.app" class="transition hover:text-white focusable" data-i18n="ft_contact">تواصل معنا</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-extrabold text-white" data-i18n="ft_legal">قانوني</h3>
+          <ul class="mt-4 space-y-3 text-sm">
+            <li><a href="#" class="transition hover:text-white focusable" data-i18n="ft_privacy">سياسة الخصوصية</a></li>
+            <li><a href="#" class="transition hover:text-white focusable" data-i18n="ft_terms">الشروط والأحكام</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-sm text-white/50 sm:flex-row">
+        <p data-i18n="ft_rights">© ٢٠٢٦ تمرين. جميع الحقوق محفوظة.</p>
+        <p data-i18n="ft_made">صُنع بشغف للمجتمع الرياضي 💪</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ============== i18n dictionary ============== */
+    const I18N = {
+      ar: {
+        skip: "تخطَّ إلى المحتوى",
+        nav_how: "كيف يعمل", nav_features: "المميزات", nav_trainers: "للمدرّبين", nav_faq: "الأسئلة الشائعة", nav_cta: "حمّل التطبيق",
+        lang_switch: "EN",
+        hero_badge: "تمارين جماعية في مكان واحد",
+        hero_title_1: "استضف تمرينك.", hero_title_2: "انضم. تمرّن.",
+        hero_sub: "منصة عربية لاستضافة التمارين الجماعية المدفوعة والانضمام إليها. حدّد الوقت والمكان والسعر، وادفع بسهولة عبر STC Pay — بدون تعقيد.",
+        badge_top: "حمّله من", badge_store: "App Store",
+        hero_secondary: "كيف يعمل؟",
+        hero_trust_1: "دفع عبر STC Pay", hero_trust_2: "بدون بطاقات",
+        feed_title: "تمارين قريبة منك",
+        how_kicker: "بثلاث خطوات", how_title: "كيف يعمل", how_sub: "من التصفّح إلى التمرين في دقائق.",
+        how_1_t: "تصفّح", how_1_d: "استكشف التمارين القريبة منك حسب الوقت والمكان والسعر.",
+        how_2_t: "انضم وادفع", how_2_d: "احجز مكانك وادفع عبر STC Pay، ثم اضغط «أرسلت المبلغ».",
+        how_3_t: "تمرّن", how_3_d: "احضر تمرينك مع التذكيرات التلقائية ولا تفوّت موعدك.",
+        feat_kicker: "كل ما تحتاجه", feat_title: "مميزات تصنع الفرق",
+        f1_t: "استضف تمرينك", f1_d: "أنشئ تمرينًا مدفوعًا في ثوانٍ: حدّد الوقت والمكان والسعر والسعة ووقت الانتهاء. تختفي التمارين تلقائيًا بمجرد انتهائها.",
+        f1_p1: "تحكّم كامل بالسعر والسعة", f1_p2: "وقت انتهاء إلزامي وإخفاء تلقائي",
+        f1_card_title: "إنشاء تمرين", f1_row1: "الوقت", f1_row2: "المكان", f1_row3: "السعر", f1_row4: "السعة", f1_card_btn: "نشر التمرين",
+        f2_t: "انضم وادفع بسهولة", f2_d: "ادفع عبر STC Pay واضغط «أرسلت المبلغ»، ثم يؤكّد المضيف أو يرفض. نظام قائم على الثقة، بدون احتكاك البطاقات.",
+        f2_p1: "تأكيد أو رفض فوري من المضيف", f2_p2: "بدون إدخال بيانات بطاقات",
+        f2_card_title: "إتمام الدفع", f2_amount_l: "المبلغ المطلوب", f2_via: "عبر STC Pay", f2_btn1: "أرسلت المبلغ", f2_status: "بانتظار تأكيد المضيف",
+        f3_t: "أضف أصدقاءك", f3_d: "أحضر أصدقاءك معك: أضف مشاركين ضيوف إلى حجزك ضمن دفعة واحدة، بدون حاجة لحسابات منفصلة.",
+        f3_p1: "دفعة واحدة لكل المجموعة", f3_p2: "بدون حسابات إضافية للضيوف",
+        f3_card_title: "المشاركون في حجزك", f3_me: "أنت", f3_host_tag: "صاحب الحجز", f3_g1: "محمد (ضيف)", f3_g2: "سارة (ضيف)", f3_add: "أضف صديقًا",
+        f4_t: "تذكيرات تلقائية", f4_d: "تذكيرات تلقائية قبل التمارين القادمة حتى لا يفوّت أحد موعده. ابقَ ملتزمًا دون عناء.",
+        f4_p1: "إشعارات قبل بدء التمرين", f4_p2: "تنبيهات للمضيف والمشاركين",
+        f4_now: "الآن", f4_notif: "تذكير: تمرين «كروسفت صباحي» يبدأ بعد ساعة في حي النخيل 🏋️", f4_t2: "تمرين", f4_yest: "أمس", f4_notif2: "لا تنسَ تمرين الغد في تمام ٦:٣٠ مساءً ⏰",
+        tr_kicker: "للمدرّبين والمنظّمين", tr_title: "حوّل تمارينك إلى دخل", tr_sub: "أنشئ جلسات مدفوعة، أدِر السعة والمدفوعات، وابنِ مجتمعك الرياضي — كل ذلك من تطبيق واحد.", tr_cta: "ابدأ كمضيف",
+        tr_s1: "تحكّم بالتسعير", tr_s2: "رسوم إعداد", tr_s3: "مدفوعات سهلة", tr_s4: "عدد التمارين",
+        ts_kicker: "قصص حقيقية", ts_title: "يحبّه المجتمع الرياضي",
+        ts_1_q: "«صرت أنظّم تمارين الكروسفت وأستقبل المدفوعات بدون أي تعقيد. وفّر علي وقت كثير.»", ts_1_n: "فهد العتيبي", ts_1_r: "مدرب كروسفت",
+        ts_2_q: "«أحجز تمارين اليوغا قريب مني وأدفع بثوانٍ عبر STC Pay. تجربة مريحة جدًا.»", ts_2_n: "نورة القحطاني", ts_2_r: "مشتركة",
+        ts_3_q: "«أضيف أصحابي للحجز بدفعة واحدة، ونروح نتمرّن جماعة. فكرة رهيبة!»", ts_3_n: "عبدالله الشمري", ts_3_r: "مشترك",
+        faq_kicker: "أسئلة شائعة", faq_title: "كل ما تريد معرفته",
+        faq_1_q: "كيف تتم عملية الدفع؟", faq_1_a: "تدفع مباشرة للمضيف عبر STC Pay، ثم تضغط «أرسلت المبلغ». يؤكّد المضيف استلام المبلغ ليُعتمد حجزك. نظام قائم على الثقة وبدون احتكاك البطاقات.",
+        faq_2_q: "ماذا عن الاسترداد والإلغاء؟", faq_2_a: "يتم الاسترداد بالتنسيق المباشر بين المشارك والمضيف، حيث تتم المدفوعات بينهما عبر STC Pay. ننصح المضيفين بتوضيح سياسة الإلغاء في وصف التمرين.",
+        faq_3_q: "هل أستطيع إضافة أصدقائي؟", faq_3_a: "نعم، يمكنك إضافة مشاركين ضيوف إلى حجزك ضمن دفعة واحدة دون الحاجة لإنشاء حسابات منفصلة لهم.",
+        faq_4_q: "هل تصلني تذكيرات قبل التمرين؟", faq_4_a: "بالتأكيد. يرسل التطبيق تذكيرات تلقائية قبل بدء التمارين القادمة لكل من المضيف والمشاركين حتى لا يفوّت أحد موعده.",
+        faq_5_q: "هل يحتاج المضيف لرسوم اشتراك؟", faq_5_a: "لا توجد رسوم إعداد للبدء. أنشئ تمرينك، حدّد سعرك، وابدأ باستقبال المشاركين فورًا.",
+        cta_title: "جاهز تبدأ تمرينك؟", cta_sub: "حمّل تطبيق تمرين الآن وانضم لمجتمع رياضي ينمو كل يوم.",
+        ft_about: "منصة عربية لاستضافة التمارين الجماعية المدفوعة والانضمام إليها بسهولة.",
+        ft_product: "المنتج", ft_support: "الدعم", ft_legal: "قانوني",
+        ft_contact: "تواصل معنا", ft_privacy: "سياسة الخصوصية", ft_terms: "الشروط والأحكام",
+        ft_rights: "© ٢٠٢٦ تمرين. جميع الحقوق محفوظة.", ft_made: "صُنع بشغف للمجتمع الرياضي 💪",
+      },
+      en: {
+        skip: "Skip to content",
+        nav_how: "How it works", nav_features: "Features", nav_trainers: "For trainers", nav_faq: "FAQ", nav_cta: "Get the app",
+        lang_switch: "ع",
+        hero_badge: "Group workouts, all in one place",
+        hero_title_1: "Host your workout.", hero_title_2: "Join. Train.",
+        hero_sub: "An Arabic-first platform to host and join paid group workouts. Set the time, place and price, and pay easily via STC Pay — no friction.",
+        badge_top: "Download on the", badge_store: "App Store",
+        hero_secondary: "How it works?",
+        hero_trust_1: "Pay via STC Pay", hero_trust_2: "No cards needed",
+        feed_title: "Workouts near you",
+        how_kicker: "In three steps", how_title: "How it works", how_sub: "From browsing to training in minutes.",
+        how_1_t: "Browse", how_1_d: "Explore workouts near you by time, place and price.",
+        how_2_t: "Join & pay", how_2_d: "Book your spot and pay via STC Pay, then tap “I sent the amount”.",
+        how_3_t: "Train", how_3_d: "Show up with automatic reminders so you never miss a session.",
+        feat_kicker: "Everything you need", feat_title: "Features that make the difference",
+        f1_t: "Host your workout", f1_d: "Create a paid session in seconds: set the time, place, price, capacity and a required end time. Sessions auto-hide once they’re over.",
+        f1_p1: "Full control of price & capacity", f1_p2: "Required end time & auto-hide",
+        f1_card_title: "Create a session", f1_row1: "Time", f1_row2: "Place", f1_row3: "Price", f1_row4: "Capacity", f1_card_btn: "Publish session",
+        f2_t: "Join & pay easily", f2_d: "Pay via STC Pay and tap “I sent the amount”, then the host confirms or rejects. Honor-system, no card friction.",
+        f2_p1: "Instant confirm or reject by host", f2_p2: "No card details required",
+        f2_card_title: "Complete payment", f2_amount_l: "Amount due", f2_via: "via STC Pay", f2_btn1: "I sent the amount", f2_status: "Awaiting host confirmation",
+        f3_t: "Bring your friends", f3_d: "Add guest participants to your booking under a single payment — no separate accounts needed.",
+        f3_p1: "One payment for the whole group", f3_p2: "No extra accounts for guests",
+        f3_card_title: "Participants in your booking", f3_me: "You", f3_host_tag: "Booking owner", f3_g1: "Mohammed (guest)", f3_g2: "Sara (guest)", f3_add: "Add a friend",
+        f4_t: "Automatic reminders", f4_d: "Automatic reminders before upcoming sessions so no one misses their workout. Stay consistent, effortlessly.",
+        f4_p1: "Notifications before a session starts", f4_p2: "Alerts for hosts and participants",
+        f4_now: "now", f4_notif: "Reminder: “Morning CrossFit” starts in an hour at Al Nakheel 🏋️", f4_t2: "Tamrin", f4_yest: "yesterday", f4_notif2: "Don’t forget tomorrow’s workout at 6:30 PM ⏰",
+        tr_kicker: "For trainers & organizers", tr_title: "Turn your workouts into income", tr_sub: "Create paid sessions, manage capacity and payments, and build your fitness community — all from one app.", tr_cta: "Start as a host",
+        tr_s1: "Pricing control", tr_s2: "Setup fees", tr_s3: "Easy payments", tr_s4: "Sessions",
+        ts_kicker: "Real stories", ts_title: "Loved by the fitness community",
+        ts_1_q: "“I now run my CrossFit sessions and collect payments with zero hassle. It saved me so much time.”", ts_1_n: "Fahad Al-Otaibi", ts_1_r: "CrossFit coach",
+        ts_2_q: "“I book yoga sessions near me and pay in seconds via STC Pay. Super convenient.”", ts_2_n: "Noura Al-Qahtani", ts_2_r: "Member",
+        ts_3_q: "“I add my friends to one booking and we train together. Brilliant idea!”", ts_3_n: "Abdullah Al-Shammari", ts_3_r: "Member",
+        faq_kicker: "FAQ", faq_title: "Everything you want to know",
+        faq_1_q: "How does payment work?", faq_1_a: "You pay the host directly via STC Pay, then tap “I sent the amount”. The host confirms receipt to approve your booking. Honor-system, with no card friction.",
+        faq_2_q: "What about refunds and cancellations?", faq_2_a: "Refunds are arranged directly between the participant and the host, since payments happen between them via STC Pay. We recommend hosts state their cancellation policy in the session description.",
+        faq_3_q: "Can I add my friends?", faq_3_a: "Yes — you can add guest participants to your booking under a single payment, with no need to create separate accounts for them.",
+        faq_4_q: "Will I get reminders before a session?", faq_4_a: "Absolutely. The app sends automatic reminders before upcoming sessions to both hosts and participants so no one misses their workout.",
+        faq_5_q: "Do hosts need a subscription fee?", faq_5_a: "There are no setup fees to start. Create your session, set your price, and start accepting participants right away.",
+        cta_title: "Ready to start training?", cta_sub: "Download Tamrin now and join a fitness community that grows every day.",
+        ft_about: "An Arabic-first platform to host and join paid group workouts with ease.",
+        ft_product: "Product", ft_support: "Support", ft_legal: "Legal",
+        ft_contact: "Contact us", ft_privacy: "Privacy policy", ft_terms: "Terms & conditions",
+        ft_rights: "© 2026 Tamrin. All rights reserved.", ft_made: "Made with passion for the fitness community 💪",
+      },
+    };
+
+    const docEl = document.documentElement;
+
+    function applyLang(lang) {
+      const dict = I18N[lang];
+      docEl.lang = lang;
+      docEl.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      document.querySelectorAll('[data-i18n]').forEach(function (el) {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key] != null) el.textContent = dict[key];
+      });
+      try { localStorage.setItem('tamrin-lang', lang); } catch (e) {}
+    }
+
+    function initLang() {
+      let lang = 'ar';
+      try { lang = localStorage.getItem('tamrin-lang') || 'ar'; } catch (e) {}
+      applyLang(lang);
+    }
+
+    document.getElementById('langToggle').addEventListener('click', function () {
+      applyLang(docEl.lang === 'ar' ? 'en' : 'ar');
+    });
+
+    /* ============== Mobile menu ============== */
+    (function () {
+      const btn = document.getElementById('menuBtn');
+      const menu = document.getElementById('mobileMenu');
+      btn.addEventListener('click', function () {
+        const open = menu.classList.toggle('hidden') === false;
+        btn.setAttribute('aria-expanded', String(open));
+      });
+      menu.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () {
+          menu.classList.add('hidden');
+          btn.setAttribute('aria-expanded', 'false');
+        });
+      });
+    })();
+
+    /* ============== Sticky nav condense ============== */
+    (function () {
+      const bar = document.getElementById('navbar');
+      function onScroll() {
+        if (window.scrollY > 12) {
+          bar.classList.add('shadow-card', 'bg-white/90', 'border-brand-line');
+          bar.classList.remove('bg-white/70');
+        } else {
+          bar.classList.remove('shadow-card', 'bg-white/90', 'border-brand-line');
+          bar.classList.add('bg-white/70');
+        }
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+
+    /* ============== FAQ accordion ============== */
+    document.querySelectorAll('.faq-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const item = btn.closest('.faq-item');
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(function (it) {
+          it.classList.remove('open');
+          it.querySelector('.faq-btn').setAttribute('aria-expanded', 'false');
+        });
+        if (!isOpen) {
+          item.classList.add('open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+
+    /* ============== Scroll reveal ============== */
+    (function () {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const els = document.querySelectorAll('.reveal');
+      if (reduce || !('IntersectionObserver' in window)) {
+        els.forEach(function (el) { el.classList.add('in'); });
+        return;
+      }
+      const io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+      els.forEach(function (el) { io.observe(el); });
+    })();
+
+    /* ============== init ============== */
+    initLang();
+  </script>
+</body>
+</html>
