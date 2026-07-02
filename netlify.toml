@@ -21,3 +21,9 @@
   from = "/event/*"
   to = "/404.html"
   status = 200
+
+# Workspace invite links: same branded fallback.
+[[redirects]]
+  from = "/join/*"
+  to = "/404.html"
+  status = 200
