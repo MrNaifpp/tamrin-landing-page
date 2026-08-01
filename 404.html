@@ -25,17 +25,32 @@
   <meta name="twitter:title" content="تمرين — افتح التمرين في التطبيق" />
   <meta name="twitter:description" content="افتح هذا التمرين في تطبيق تمرين وانضم إليه." />
   <meta name="twitter:image" content="https://guileless-squirrel-b6537a.netlify.app/assets/og-image.png?v=2" />
+  <!-- خط ثمانية سانس مضمّن base64 في assets/fonts.css — يُحمّل بدون حجب الرسم -->
+  <link rel="preload" href="/assets/fonts.css?v=1" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="/assets/fonts.css?v=1" /></noscript>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = { theme: { extend: {
       colors: { brand: { green:'#1FA64D', vivid:'#2FBF4E', deep:'#15833C', blue:'#2F6BFF', ink:'#0C1322', muted:'#5B6675', soft:'#F4F7F9', line:'#E7ECF1' } },
-      fontFamily: { ar:['Tajawal','system-ui','sans-serif'], en:['Inter','system-ui','sans-serif'] },
+      fontFamily: { ar:['Thmanyah Sans','system-ui','sans-serif'], en:['Inter','system-ui','sans-serif'] },
     } } };
   </script>
-  <style> body { font-family:'Tajawal',system-ui,sans-serif; } </style>
+  <style>
+    /* ---------- خط ثمانية سانس + خصائص OpenType ---------- */
+    :root { --ff-base: 'kern' 1, 'liga' 1, 'calt' 1, 'rlig' 1; }
+    body {
+      font-family: 'Thmanyah Sans', system-ui, sans-serif;
+      font-kerning: normal;
+      font-variant-ligatures: common-ligatures contextual;
+      font-feature-settings: var(--ff-base);
+    }
+    /* الأحرف المرسلة (swsh) — للعناوين فقط */
+    :is(h1, h2, h3, .swash) { font-feature-settings: var(--ff-base), 'swsh' 1; }
+    .no-swash { font-feature-settings: var(--ff-base); }
+  </style>
 </head>
 <body class="min-h-screen bg-white text-brand-ink antialiased">
   <main class="relative mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 text-center">
