@@ -64,6 +64,27 @@
   </div>
 </header>
 
+<!-- ================================================================
+     [شريط تجريبي — يُحذف لاحقًا]
+     زرّان للتجربة فقط. لحذفهما: امسح هذا البلوك، وبلوك <style id="devbar-style">
+     في نهاية الملف، وملف preview-share.html، والسطور المعلّمة
+     «[تجريبي]» داخل 404.html.
+     ================================================================ -->
+<div class="devbar" id="devbar">
+  <span class="devbar-tag">تجريبي</span>
+  <a class="devbar-btn" href="404.html?preview=join">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+    فتح رابط دعوة بدون التطبيق
+  </a>
+  <a class="devbar-btn" href="preview-share.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+    صورة معاينة الرابط
+  </a>
+  <button class="devbar-x" type="button" onclick="document.getElementById('devbar').remove()" aria-label="إخفاء الشريط التجريبي">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+</div>
+
 <main>
 
   <!-- ======================= HERO =======================
@@ -673,5 +694,41 @@ const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   applyLang(lang);
 })();
 </script>
+
+<!-- [أنماط الشريط التجريبي — تُحذف مع الشريط] -->
+<style id="devbar-style">
+  .devbar {
+    position: fixed; inset-block-end: 14px; inset-inline: 14px; z-index: 120;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px;
+    margin-inline: auto; width: fit-content; max-width: calc(100% - 28px);
+    padding: 8px 8px 8px 10px; border-radius: var(--r-pill);
+    background: rgba(20,20,20,.86); color: #fff;
+    -webkit-backdrop-filter: blur(26px) saturate(185%); backdrop-filter: blur(26px) saturate(185%);
+    border: .5px solid rgba(255,255,255,.16);
+    box-shadow: 0 10px 34px -8px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.2);
+  }
+  .devbar-tag {
+    padding: 4px 10px; border-radius: var(--r-pill);
+    background: var(--peach); color: var(--ink);
+    font-size: 11px; font-weight: 700; letter-spacing: .02em;
+  }
+  .devbar-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    min-height: 38px; padding-inline: 14px; border-radius: var(--r-pill);
+    background: rgba(255,255,255,.12); color: #fff;
+    font-size: 13.5px; font-weight: 700; white-space: nowrap;
+    transition: background-color .2s;
+  }
+  .devbar-btn:hover { background: rgba(255,255,255,.22); }
+  .devbar-btn svg { width: 16px; height: 16px; flex: none; }
+  .devbar-x {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 50%;
+    color: rgba(255,255,255,.6); transition: color .2s, background-color .2s;
+  }
+  .devbar-x:hover { color: #fff; background: rgba(255,255,255,.12); }
+  .devbar-x svg { width: 15px; height: 15px; }
+  @media (max-width: 520px) { .devbar-btn { font-size: 12.5px; padding-inline: 11px; } }
+</style>
 </body>
 </html>

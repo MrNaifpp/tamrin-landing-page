@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     [صفحة تجريبية — تُحذف لاحقًا]
+     تعرض بطاقة المعاينة التي تظهر عند مشاركة رابط الانضمام، كما
+     ترسمها واتساب و iMessage و X و فيسبوك. تقرأ وسوم og:/twitter:
+     من 404.html نفسه حتى لا تتقادم إن عُدّلت الوسوم.
+     ============================================================ -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>معاينة رابط المشاركة — تجريبي</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="preload" href="assets/fonts.css?v=2" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="assets/fonts.css?v=2" /></noscript>
+  <link rel="stylesheet" href="assets/site.css?v=4" />
+  <style>
+    .lab { padding-block: 100px 80px; }
+    .lab h1 { font-size: clamp(1.6rem, 5vw, 2.2rem); }
+    .warn {
+      margin-top: 24px; padding: 18px 20px; border-radius: var(--r-card);
+      background: #fff5d6; border: 1px solid #e8cf84; color: #5c4708;
+      font-size: 15px; line-height: 1.75;
+    }
+    .warn b { color: #3d2f04; }
+
+    .url-row {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+      margin-top: 26px; font-size: 14px; color: var(--text-2);
+    }
+    .url-row code {
+      padding: 6px 12px; border-radius: var(--r-pill);
+      background: var(--secondary); font-size: 13px; direction: ltr;
+    }
+
+    .grid { display: grid; gap: 26px; margin-top: 40px; }
+    @media (min-width: 880px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+    .demo h2 { font-size: 15px; margin-bottom: 12px; color: var(--text-3); }
+
+    /* ---- واتساب ---- */
+    .wa { padding: 16px; border-radius: var(--r-card); background: #e6ddd4; }
+    .wa-bubble {
+      max-width: 320px; margin-inline-start: auto;
+      background: #dcf8c6; border-radius: 12px 12px 2px 12px;
+      padding: 5px; box-shadow: 0 1px 1px rgba(0,0,0,.13);
+    }
+    .wa-card { background: rgba(255,255,255,.55); border-radius: 8px; overflow: hidden; }
+    .wa-card img { width: 100%; aspect-ratio: 1200/630; object-fit: cover; background: #ccc; }
+    .wa-meta { padding: 8px 10px; }
+    .wa-meta .t { font-size: 13.5px; font-weight: 700; color: #111; line-height: 1.35; }
+    .wa-meta .d { font-size: 12.5px; color: #667781; margin-top: 2px; line-height: 1.4;
+                  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .wa-meta .u { font-size: 12px; color: #8696a0; margin-top: 4px; direction: ltr; text-align: start; }
+    .wa-link { padding: 4px 8px 6px; font-size: 14px; color: #0a84ff; direction: ltr; text-align: start; word-break: break-all; }
+    .wa-time { display: block; text-align: start; font-size: 11px; color: #667781; padding: 0 8px 3px; }
+
+    /* ---- iMessage ---- */
+    .im { padding: 16px; border-radius: var(--r-card); background: #fff; border: 1px solid var(--line); }
+    .im-bubble { max-width: 300px; margin-inline-start: auto; border-radius: 18px; overflow: hidden; background: #e9e9eb; }
+    .im-bubble img { width: 100%; aspect-ratio: 1200/630; object-fit: cover; background: #ccc; }
+    .im-meta { padding: 9px 12px 11px; }
+    .im-meta .t { font-size: 13px; font-weight: 600; color: #000; line-height: 1.35; }
+    .im-meta .u { font-size: 12px; color: #8e8e93; margin-top: 2px; direction: ltr; text-align: start; }
+
+    /* ---- X ---- */
+    .tw { padding: 16px; border-radius: var(--r-card); background: #fff; border: 1px solid var(--line); }
+    .tw-card { max-width: 420px; border: 1px solid #cfd9de; border-radius: 16px; overflow: hidden; }
+    .tw-card img { width: 100%; aspect-ratio: 1200/630; object-fit: cover; background: #ccc; }
+    .tw-meta { padding: 11px 13px 13px; }
+    .tw-meta .u { font-size: 13px; color: #536471; direction: ltr; text-align: start; }
+    .tw-meta .t { font-size: 15px; color: #0f1419; margin-top: 2px; line-height: 1.35; }
+    .tw-meta .d { font-size: 15px; color: #536471; margin-top: 2px; line-height: 1.35;
+                  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* ---- فيسبوك ---- */
+    .fb { padding: 16px; border-radius: var(--r-card); background: #f0f2f5; }
+    .fb-card { max-width: 420px; background: #fff; border: 1px solid #dadde1; border-radius: 8px; overflow: hidden; }
+    .fb-card img { width: 100%; aspect-ratio: 1200/630; object-fit: cover; background: #ccc; }
+    .fb-meta { padding: 10px 12px; background: #f2f3f5; border-top: 1px solid #dadde1; }
+    .fb-meta .u { font-size: 12px; color: #65676b; text-transform: uppercase; direction: ltr; text-align: start; }
+    .fb-meta .t { font-size: 16px; font-weight: 700; color: #050505; margin-top: 3px; line-height: 1.3; }
+    .fb-meta .d { font-size: 14px; color: #65676b; margin-top: 2px; line-height: 1.35;
+                  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .raw { margin-top: 46px; }
+    .raw table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .raw th, .raw td { text-align: start; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .raw th { width: 190px; color: var(--text-3); font-weight: 700; white-space: nowrap; }
+    .raw td { color: var(--text-2); word-break: break-word; }
+    .raw code { direction: ltr; display: inline-block; font-size: 13px; }
+  </style>
+</head>
+
+<body>
+
+<header class="nav stuck">
+  <div class="wrap nav-row">
+    <a href="index.html" class="nav-pill brand" aria-label="تمرين">
+      <img src="assets/tamrin-icon.png" alt="" width="38" height="38" />
+      <span>تمرين</span>
+    </a>
+    <a href="index.html" class="nav-pill nav-cta">الرجوع للموقع</a>
+  </div>
+</header>
+
+<main class="wrap lab">
+  <p class="eyebrow">صفحة تجريبية</p>
+  <h1>بطاقة المعاينة عند مشاركة رابط الانضمام</h1>
+
+  <div class="url-row">
+    <span>الرابط المُشارَك:</span>
+    <code id="sharedUrl">https://…/join/RWB-482</code>
+    <span>ويُقدَّم من</span>
+    <code>404.html</code>
+  </div>
+
+  <div class="warn" id="warn"></div>
+
+  <div class="grid">
+    <div class="demo">
+      <h2>واتساب</h2>
+      <div class="wa">
+        <div class="wa-bubble">
+          <div class="wa-card">
+            <img data-og="image" alt="" />
+            <div class="wa-meta">
+              <p class="t" data-og="title"></p>
+              <p class="d" data-og="description"></p>
+              <p class="u" data-og="host"></p>
+            </div>
+          </div>
+          <p class="wa-link" data-og="url"></p>
+          <span class="wa-time">١٢:٥٥ ✓✓</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo">
+      <h2>iMessage</h2>
+      <div class="im">
+        <div class="im-bubble">
+          <img data-og="image" alt="" />
+          <div class="im-meta">
+            <p class="t" data-og="title"></p>
+            <p class="u" data-og="host"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo">
+      <h2>X</h2>
+      <div class="tw">
+        <div class="tw-card">
+          <img data-og="image" alt="" />
+          <div class="tw-meta">
+            <p class="u" data-og="host"></p>
+            <p class="t" data-og="title"></p>
+            <p class="d" data-og="description"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo">
+      <h2>فيسبوك / لينكدإن</h2>
+      <div class="fb">
+        <div class="fb-card">
+          <img data-og="image" alt="" />
+          <div class="fb-meta">
+            <p class="u" data-og="host"></p>
+            <p class="t" data-og="title"></p>
+            <p class="d" data-og="description"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="raw">
+    <h2 class="h-feature" style="margin-bottom:16px">الوسوم كما هي في 404.html</h2>
+    <table>
+      <tbody id="rawTags"></tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+/* [تجريبي] تُقرأ الوسوم من 404.html نفسه، وإن تعذّر الجلب (file:// يمنعه في
+   بعض المتصفحات) نرجع لنسخة مضمّنة مطابقة لما في الملف وقت كتابة الصفحة. */
+const FALLBACK = {
+  title: 'تمرين — افتح التمرين في التطبيق',
+  description: 'افتح هذا التمرين في تطبيق تمرين وانضم إليه.',
+  image: 'assets/og-image.png?v=2',
+  url: 'https://guileless-squirrel-b6537a.netlify.app/',
+  site_name: 'تمرين',
+  'image:alt': 'تطبيق تمرين — تمارين المجموعة بدون فوضى الجروب',
+  'image:width': '1200',
+  'image:height': '630',
+  'twitter:card': 'summary_large_image',
+};
+
+const SHARED = 'https://guileless-squirrel-b6537a.netlify.app/join/RWB-482';
+
+function paint(tags, source) {
+  const host = (() => { try { return new URL(tags.url).host; } catch (e) { return 'guileless-squirrel-b6537a.netlify.app'; } })();
+
+  // الصورة نسبية محليًا حتى تظهر بدون إنترنت
+  let img = tags.image || '';
+  if (img.startsWith('http')) {
+    try { img = 'assets/' + new URL(img).pathname.split('/assets/')[1]; } catch (e) {}
+  }
+
+  const values = {
+    title: tags.title || '',
+    description: tags.description || '',
+    host: host,
+    url: SHARED,
+    image: img,
+  };
+
+  document.querySelectorAll('[data-og]').forEach(function (el) {
+    const key = el.getAttribute('data-og');
+    if (el.tagName === 'IMG') {
+      el.src = values.image;
+      el.alt = tags['image:alt'] || '';
+    } else {
+      el.textContent = values[key] || '';
+    }
+  });
+
+  document.getElementById('sharedUrl').textContent = SHARED;
+
+  // الجدول الخام
+  const rows = Object.entries(tags).map(([k, v]) =>
+    `<tr><th>og:${k}</th><td><code>${String(v).replace(/[<&]/g, c => ({'<':'&lt;','&':'&amp;'}[c]))}</code></td></tr>`
+  ).join('');
+  document.getElementById('rawTags').innerHTML = rows +
+    `<tr><th>المصدر</th><td>${source}</td></tr>`;
+
+  // التحذير: الوسوم ثابتة ومشتركة بين /event و /join
+  document.getElementById('warn').innerHTML =
+    '<b>ملاحظة:</b> هذه الوسوم ثابتة في <code>404.html</code>، و<code>netlify.toml</code> يوجّه ' +
+    '<code>/event/*</code> و<code>/join/*</code> إلى الملف نفسه. زواحف المعاينة لا تُشغّل JavaScript، ' +
+    'فالفرع الذي يميّز «دعوة إلى مجموعة» عن «تفاصيل تمرين» لا يصل إليها — ' +
+    'ورابط دعوة المجموعة يُعرض بنص التمرين: «' + (tags.title || '') + '».';
+}
+
+fetch('404.html')
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+  .then(html => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const tags = {};
+    doc.querySelectorAll('meta[property^="og:"]').forEach(m => {
+      tags[m.getAttribute('property').slice(3)] = m.getAttribute('content');
+    });
+    const tw = doc.querySelector('meta[name="twitter:card"]');
+    if (tw) tags['twitter:card'] = tw.getAttribute('content');
+    paint(tags, 'مقروءة مباشرةً من <code>404.html</code>');
+  })
+  .catch(() => paint(FALLBACK, 'نسخة مضمّنة — تعذّر جلب <code>404.html</code> عبر <code>file://</code>'));
+</script>
+</body>
+</html>
