@@ -18,12 +18,14 @@ DEFAULT_SRC = pathlib.Path.home() / "Downloads/Thmanyah-Font-Family/thmanyah typ
 OUT = pathlib.Path(__file__).resolve().parent.parent / "assets/fonts.css"
 
 # (اسم ملف الوزن، قيمة font-weight في CSS)
+# نفس أوزان TamrinFontWeight في التطبيق بالضبط. لا يوجد Black: التطبيق يحوّل
+# semibold/bold/heavy/black كلها إلى Bold، فإضافته هنا تخلق وزنًا لا وجود له
+# في المنتج (و‍تكلّف ~78KB بلا مقابل).
 WEIGHTS = [
     ("Light", "300"),
     ("Regular", "400"),
     ("Medium", "500"),
     ("Bold", "700"),
-    ("Black", "900"),
 ]
 
 HEADER = """/* =========================================================================
