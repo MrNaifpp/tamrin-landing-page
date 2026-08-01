@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     قالب صورة المشاركة (Open Graph) — 1200×630
+     يُصوَّر برأسٍ مخفي إلى assets/og-image.png عبر:
+         python3 tools/build-og.py
+     يستخدم نفس الرموز والخط الموجودة في الموقع، فلا تتفرّع الهوية.
+     ============================================================ -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>og-template</title>
+  <link rel="stylesheet" href="/assets/fonts.css" />
+  <style>
+    :root {
+      --lime: #c2eb64;
+      --mint: #9edbb8;
+      --green: #57ba78;
+      --ink: #141414;
+      --page: #f3f3f3;
+      --text-2: #5c5c5c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { width: 1200px; height: 630px; overflow: hidden; }
+
+    body {
+      background: var(--page);
+      color: var(--ink);
+      font-family: 'Thmanyah Sans', system-ui, sans-serif;
+      font-kerning: normal;
+      font-variant-ligatures: common-ligatures contextual;
+      font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'rlig' 1, 'ss01' 1, 'swsh' 1;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    /* الوهج نفسه المستخدم في الهيرو (AuroraBackdrop) */
+    body::before, body::after { content: ''; position: absolute; border-radius: 50%; }
+    body::before {
+      inset-block-start: -190px; inset-inline-end: -120px;
+      width: 560px; height: 560px;
+      background: var(--lime); opacity: .42; filter: blur(105px);
+    }
+    body::after {
+      inset-block-end: -220px; inset-inline-start: 240px;
+      width: 480px; height: 480px;
+      background: var(--mint); opacity: .3; filter: blur(110px);
+    }
+
+    /* العمود النصّي هو العنصر الوحيد في تدفّق الـflex، فيستقرّ عند بداية
+       السطر — أي الحافة اليمنى في RTL — بلا هوامش تلقائية. */
+    .copy {
+      position: relative; z-index: 2;
+      padding-inline-start: 64px;     /* في RTL: مسافة من الحافة اليمنى */
+      width: 700px; flex: none;
+    }
+
+    .brand { display: flex; align-items: center; gap: 16px; margin-bottom: 34px; }
+    .brand img { width: 76px; height: 76px; border-radius: 22.37%; }  /* نسبة أيقونة iOS */
+    .brand span { font-size: 44px; font-weight: 700; letter-spacing: -.01em; }
+
+    h1 {
+      font-size: 57px; font-weight: 700; line-height: 1.17;
+      letter-spacing: -.015em; text-wrap: balance;
+    }
+
+    p.sub {
+      margin-top: 22px; font-size: 24px; line-height: 1.55;
+      color: var(--text-2); max-width: 27ch; text-wrap: balance;
+    }
+
+    ul {
+      display: flex; gap: 26px; margin-top: 36px;
+      list-style: none; font-size: 20px; font-weight: 700; color: var(--ink);
+    }
+    li { display: flex; align-items: center; gap: 9px; }
+    li svg { width: 21px; height: 21px; color: var(--green); }
+
+    /* الجهاز مقصوص من الحافة السفلية، بلقطة حقيقية من التطبيق.
+       إحداثيات فيزيائية عمدًا: inset-inline-start في RTL هو الحافة اليمنى. */
+    .shot {
+      position: absolute; z-index: 1;
+      left: 66px; top: 88px;
+      width: 316px; padding: 10px;
+      border-radius: 58px;
+      background: linear-gradient(160deg, #3a3a3c, #1c1c1e 42%, #2c2c2e);
+      box-shadow: 0 44px 90px -30px rgba(0, 0, 0, .5), inset 0 0 0 .5px rgba(255, 255, 255, .22);
+      transform: rotate(-4deg);
+    }
+    .shot .screen {
+      border-radius: 49px; overflow: hidden; background: #0f0f0f;
+      aspect-ratio: 1206 / 2622;
+    }
+    .shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  </style>
+</head>
+<body>
+  <div class="copy">
+    <div class="brand">
+      <img src="/assets/tamrin-icon.png" alt="" />
+      <span>تمرين</span>
+    </div>
+
+    <h1>خلّ تمرين الأسبوع ينظّم نفسه.</h1>
+    <p class="sub">مجموعة خاصة لك ولأصحابك: الموعد يتكرر، والقطة محسوبة، وتعرف من نازل.</p>
+
+    <ul>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+        بدعوة فقط
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+        كاش أو تحويل
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+        بدون بطاقات
+      </li>
+    </ul>
+  </div>
+
+  <div class="shot">
+    <div class="screen"><img src="/assets/app/home.webp" alt="" /></div>
+  </div>
+</body>
+</html>
