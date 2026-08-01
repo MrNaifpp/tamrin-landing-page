@@ -4,5 +4,12 @@
 *-full.png
 verify-*.png
 
+# Raw font binaries — never commit these. الخط يُضمَّن base64 في assets/fonts.css
+# عبر tools/build-fonts.py، وترخيص ثمانية يمنع استضافتها كملفات مستقلة.
+*.otf
+*.ttf
+*.woff
+*.woff2
+
 # OS
 .DS_Store

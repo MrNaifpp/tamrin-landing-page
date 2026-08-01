@@ -10,9 +10,9 @@
   <link rel="canonical" href="https://guileless-squirrel-b6537a.netlify.app/privacy.html" />
 
   <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+  <!-- خط ثمانية سانس مضمّن base64 في assets/fonts.css — يُحمّل بدون حجب الرسم -->
+  <link rel="preload" href="assets/fonts.css?v=1" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="assets/fonts.css?v=1" /></noscript>
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -27,7 +27,7 @@
               ink: '#0C1322', muted: '#5B6675', soft: '#F4F7F9', line: '#E7ECF1',
             },
           },
-          fontFamily: { ar: ['Tajawal', 'system-ui', 'sans-serif'] },
+          fontFamily: { ar: ['Thmanyah Sans', 'system-ui', 'sans-serif'] },
           boxShadow: { card: '0 8px 30px -10px rgba(12,19,34,0.12)' },
           borderRadius: { '4xl': '2rem' },
         },
@@ -36,7 +36,18 @@
   </script>
   <style>
     html { scroll-behavior: smooth; }
-    body { font-family: 'Tajawal', system-ui, sans-serif; }
+
+    /* ---------- خط ثمانية سانس + خصائص OpenType ---------- */
+    :root { --ff-base: 'kern' 1, 'liga' 1, 'calt' 1, 'rlig' 1; }
+    body {
+      font-family: 'Thmanyah Sans', system-ui, sans-serif;
+      font-kerning: normal;
+      font-variant-ligatures: common-ligatures contextual;
+      font-feature-settings: var(--ff-base);
+    }
+    /* الأحرف المرسلة (swsh) — للعناوين فقط */
+    :is(h1, h2, h3, .swash) { font-feature-settings: var(--ff-base), 'swsh' 1; }
+    .no-swash { font-feature-settings: var(--ff-base); }
     .prose-ar h2 { font-weight: 800; color: #0C1322; font-size: 1.25rem; margin-top: 2.25rem; margin-bottom: .75rem; }
     .prose-ar h3 { font-weight: 700; color: #0C1322; font-size: 1.05rem; margin-top: 1.25rem; margin-bottom: .4rem; }
     .prose-ar p { color: #3A4453; line-height: 2; margin-bottom: .9rem; }
