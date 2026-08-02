@@ -75,19 +75,15 @@
         document.title = title;
       }
 
-      // [تجريبي — يُحذف لاحقًا] ?preview=join|event يعرض الفرع بدون نشر،
-      // لأن مسار /join/… لا يوجد عند فتح الملف محليًا.
-      var preview = new URLSearchParams(location.search).get('preview');
-
       var e = location.pathname.match(/^\/event\/([^\/?#]+)/);
-      if (e || preview === 'event') {
+      if (e) {
         show('event', 'تمرين — تفاصيل التمرين');
-        var id = e ? decodeURIComponent(e[1]) : 'DEMO-1042';
+        var id = decodeURIComponent(e[1]);
         if (id) document.getElementById('eventId').textContent = 'رقم التمرين: ' + id;
         return;
       }
 
-      if (/^\/join\/[^\/?#]+/.test(location.pathname) || preview === 'join') {
+      if (/^\/join\/[^\/?#]+/.test(location.pathname)) {
         show('join', 'تمرين — دعوة إلى مجموعة');
       }
     })();
