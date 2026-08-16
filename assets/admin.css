@@ -6,6 +6,10 @@
 
 body.admin { background: var(--page); }
 
+/* الخاصية hidden لها نفس أولوية محدّد الصنف، فأي قاعدة .x { display: … }
+   أدناه تتغلّب عليها وتُبقي العنصر ظاهرًا. هذا يعيد لها الأولوية. */
+[hidden] { display: none !important; }
+
 /* --------------------------------------------------------------- الشريط */
 .admin-top {
   position: sticky; inset-block-start: 0; z-index: 80;
