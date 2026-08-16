@@ -27,7 +27,9 @@
      الموقع ثابت وعام، وأي مفتاح هنا يصل إلى كل زائر.
      ------------------------------------------------------------------ */
   const SUPABASE_URL = 'https://hzsxwnmbdkrmipjtfzlp.supabase.co';
-  const SUPABASE_ANON_KEY = '';            // ← يُملأ عند الربط
+  // مفتاح anon — عام بطبيعته ومقصود وصوله إلى المتصفح. الحماية كلها في RLS
+  // وفي دوال admin_* التي ترفض غير المشرفين. لا تضع service_role هنا أبدًا.
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6c3h3bm1iZGtybWlwanRmemxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NTcwOTksImV4cCI6MjEwMTIzMzA5OX0.Opjcn6HMOWdw07RPDEXGaytKziAsnvvJSzpzuw8NiPY';
   const USE_MOCK = !SUPABASE_ANON_KEY;     // يتحوّل تلقائيًا عند وضع المفتاح
 
   /* ==================================================================
