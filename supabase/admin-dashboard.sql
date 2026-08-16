@@ -181,9 +181,10 @@ begin
         where p.event_id = e.id)                      as participant_count,
       (select count(*) from public.event_waitlist wl
         where wl.event_id = e.id)                     as waitlist_count,
-      -- ملاحظة: قيمة payment_status تُضبط في الخطوة 0 أدناه
+      -- 'confirmed' هي القيمة التي يكتبها التطبيق فعليًا (تُحقّق من prod في 2026-08-16).
+      -- العمود نصّي بلا قيد، فأي تغيير في التطبيق يجب أن ينعكس هنا.
       (select count(*) from public.event_participants p2
-        where p2.event_id = e.id and p2.payment_status = 'paid') as paid_count
+        where p2.event_id = e.id and p2.payment_status = 'confirmed') as paid_count
     from public.events e
     join public.workspaces w on w.id = e.workspace_id
     where e.published_at is not null
