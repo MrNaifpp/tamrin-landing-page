@@ -184,6 +184,12 @@
     return `
       <tr>
         <td><b>${esc(ev.name)}</b>${wait}</td>
+        <td>
+          <span class="who">
+            <span class="avatar sm" aria-hidden="true">${esc(initials(ev.creator_name))}</span>
+            ${esc(ev.creator_name || '—')}
+          </span>
+        </td>
         <td>${esc(ev.workspace_name)}</td>
         <td>${esc(ev.location)}</td>
         <td class="num">${asWhen(ev.start_date)}</td>
@@ -196,17 +202,17 @@
 
   async function loadEvents() {
     const body = $('eventsBody');
-    colspanRow(body, 8, '<span class="skel" style="width:180px;margin-inline:auto"></span>');
+    colspanRow(body, 9, '<span class="skel" style="width:180px;margin-inline:auto"></span>');
     try {
       const rows = await TamrinData.activeEvents();
       if (!rows.length) {
-        colspanRow(body, 8, '<b>لا فعاليات نشطة</b>كل الفعاليات إمّا انتهت أو لم تُنشر.');
+        colspanRow(body, 9, '<b>لا فعاليات نشطة</b>كل الفعاليات إمّا انتهت أو لم تُنشر.');
       } else {
         body.innerHTML = rows.map(eventRow).join('');
       }
       $('eventsCount').textContent = `${num(rows.length)} فعالية`;
     } catch (e) {
-      colspanRow(body, 8, '<b>تعذّر جلب الفعاليات</b>تحقّق من الاتصال وحاول مجددًا.');
+      colspanRow(body, 9, '<b>تعذّر جلب الفعاليات</b>تحقّق من الاتصال وحاول مجددًا.');
     }
   }
 

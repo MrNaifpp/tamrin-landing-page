@@ -86,6 +86,8 @@
       name: ['تمرين الأسبوع', 'مباراة ودية', 'تمرين اللياقة',
              'مباراة الحي', 'بادل', 'تمرين مفتوح'][Math.floor(seeded(i + 5) * 6)],
       workspace_name: WORKSPACES[Math.floor(seeded(i + 11) * WORKSPACES.length)],
+      creator_name: `${FIRST[Math.floor(seeded(i + 47) * FIRST.length)]} `
+                  + `${LAST[Math.floor(seeded(i + 83) * LAST.length)]}`,
       location: LOCATIONS[Math.floor(seeded(i + 19) * LOCATIONS.length)],
       start_date: new Date(start).toISOString(),
       end_date: new Date(start + 7200000).toISOString(),

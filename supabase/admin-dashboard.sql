@@ -169,6 +169,9 @@ begin
       e.id,
       e.name,
       w.name as workspace_name,
+      -- منظّم الفعالية. left join مقصود: لو لم يكن للمنشئ صف في users
+      -- (محذوف أو ناقص) فالفعالية تبقى ظاهرة بدل أن تختفي من القائمة.
+      coalesce(nullif(btrim(cu.name), ''), '—') as creator_name,
       e.location,
       e.start_date,
       e.end_date,
@@ -187,6 +190,7 @@ begin
         where p2.event_id = e.id and p2.payment_status = 'confirmed') as paid_count
     from public.events e
     join public.workspaces w on w.id = e.workspace_id
+    left join public.users cu on cu.user_id = e.creator_id
     where e.published_at is not null
       and e.cancelled_at is null
       and coalesce(e.end_date, e.start_date) >= now()

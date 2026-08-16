@@ -166,6 +166,12 @@ table.data td.num { font-variant-numeric: tabular-nums; }
 }
 .who b { font-weight: 700; }
 
+/* نسخة أصغر — داخل جدول الفعاليات حيث المنظّم عمود ثانوي لا رئيسي */
+.avatar.sm {
+  width: 28px; height: 28px; font-size: 12px;
+  background: color-mix(in srgb, var(--peach) 55%, transparent);
+}
+
 .tag {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 4px 11px; border-radius: var(--r-pill);
