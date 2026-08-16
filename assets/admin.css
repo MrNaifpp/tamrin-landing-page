@@ -1,0 +1,222 @@
+/* =========================================================================
+   تمرين — لوحة التحكم
+   تبني على الرموز في site.css (الألوان، الاستدارات، الخط، الزجاج).
+   لا تُعيد تعريف أي رمز — تضيف مكوّنات اللوحة فقط.
+   ========================================================================= */
+
+body.admin { background: var(--page); }
+
+/* --------------------------------------------------------------- الشريط */
+.admin-top {
+  position: sticky; inset-block-start: 0; z-index: 80;
+  border-block-end: 1px solid var(--line);
+  background: rgba(243, 243, 243, .82);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+}
+.admin-top-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; min-height: 68px;
+}
+.admin-brand { display: inline-flex; align-items: center; gap: 10px; }
+.admin-brand img { width: 34px; height: 34px; border-radius: 22.37%; }
+.admin-brand b { font-size: 17px; font-weight: 700; }
+.admin-brand span { font-size: 14px; color: var(--text-3); }
+
+.admin-who { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-2); }
+.btn-quiet {
+  min-height: 40px; padding-inline: 16px; border-radius: var(--r-pill);
+  background: var(--secondary); font-size: 14px; font-weight: 700;
+  transition: background-color .2s;
+}
+.btn-quiet:hover { background: var(--line-strong); }
+
+/* ------------------------------------------------------- شريط التجربة */
+.demo-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; margin-block-end: 26px;
+  border-radius: var(--r-card);
+  background: color-mix(in srgb, var(--peach) 42%, transparent);
+  border: 1px solid color-mix(in srgb, var(--peach) 70%, transparent);
+  font-size: 14px; font-weight: 500; color: var(--text);
+}
+.demo-banner b { font-weight: 700; }
+.demo-banner svg { width: 18px; height: 18px; flex: none; }
+
+/* -------------------------------------------------------- بوابة الدخول */
+.login-wrap {
+  min-height: 100dvh; display: grid; place-items: center; padding: 24px;
+}
+.login-card {
+  width: 100%; max-width: 420px; padding: 34px 30px 30px;
+  background: var(--card); border-radius: var(--r-card);
+  box-shadow: var(--shadow-card); border: 1px solid var(--line);
+}
+.login-card img.mark { width: 54px; height: 54px; border-radius: 22.37%; margin-block-end: 18px; }
+.login-card h1 { font-size: 25px; margin-block-end: 6px; }
+.login-card .lede { font-size: 15px; margin-block-end: 24px; }
+
+.field { margin-block-end: 14px; }
+.field label { display: block; font-size: 14px; font-weight: 700; margin-block-end: 7px; }
+.field input {
+  width: 100%; min-height: 50px; padding-inline: 16px;
+  font: inherit; font-size: 16px; color: var(--text);
+  background: var(--page); border: 1px solid var(--line-strong);
+  border-radius: 14px; transition: border-color .2s, background-color .2s;
+}
+.field input:focus { outline: none; border-color: var(--green); background: var(--card); }
+.field input::placeholder { color: var(--text-3); }
+
+.login-card .btn { width: 100%; margin-block-start: 8px; }
+.form-error {
+  display: none; margin-block-start: 14px; padding: 11px 14px;
+  border-radius: 12px; font-size: 14px; font-weight: 500;
+  background: color-mix(in srgb, #d94b4b 12%, transparent); color: #a32b2b;
+}
+.form-error.on { display: block; }
+
+/* ----------------------------------------------------------- البطاقات */
+.admin-main { padding-block: 30px 80px; }
+
+.stat-grid {
+  display: grid; gap: 14px; margin-block-end: 28px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+.stat-card {
+  padding: 20px 22px; background: var(--card);
+  border: 1px solid var(--line); border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+}
+.stat-card .k { font-size: 14px; font-weight: 700; color: var(--text-3); margin-block-end: 8px; }
+.stat-card .v {
+  font-size: 34px; font-weight: 700; line-height: 1.1;
+  letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+}
+.stat-card .sub { font-size: 13px; color: var(--text-2); margin-block-start: 6px; }
+.stat-card .sub.up { color: #3f9c5f; font-weight: 700; }
+
+/* ------------------------------------------------- المفتاح بين القسمين */
+.seg {
+  display: inline-flex; gap: 4px; padding: 4px; margin-block-end: 18px;
+  background: var(--secondary); border-radius: var(--r-pill);
+}
+.seg button {
+  min-height: 40px; padding-inline: 20px; border-radius: var(--r-pill);
+  font-size: 15px; font-weight: 700; color: var(--text-2);
+  transition: background-color .2s var(--ease), color .2s;
+}
+.seg button[aria-selected="true"] {
+  background: var(--card); color: var(--text); box-shadow: 0 2px 8px -3px rgba(0,0,0,.2);
+}
+
+/* ------------------------------------------------------------- اللوحة */
+.panel {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r-card); box-shadow: var(--shadow-card); overflow: hidden;
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap; padding: 18px 22px;
+  border-block-end: 1px solid var(--line);
+}
+.panel-head h2 { font-size: 19px; }
+.panel-head .count { font-size: 14px; color: var(--text-3); font-weight: 500; }
+
+.search {
+  position: relative; display: inline-flex; align-items: center;
+}
+.search input {
+  min-height: 42px; width: 240px; max-width: 100%;
+  padding-inline: 40px 16px; font: inherit; font-size: 15px;
+  background: var(--page); border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill); color: var(--text);
+}
+.search input:focus { outline: none; border-color: var(--green); }
+.search svg {
+  position: absolute; inset-inline-start: 14px;
+  width: 17px; height: 17px; opacity: .45; pointer-events: none;
+}
+
+/* ------------------------------------------------------------ الجداول */
+.table-scroll { overflow-x: auto; }
+table.data { width: 100%; border-collapse: collapse; font-size: 15px; }
+table.data th, table.data td {
+  padding: 14px 22px; text-align: start; vertical-align: middle;
+  white-space: nowrap;
+}
+table.data th {
+  font-size: 13px; font-weight: 700; color: var(--text-3);
+  border-block-end: 1px solid var(--line); background: var(--page);
+}
+table.data tbody tr { border-block-end: 1px solid var(--line); }
+table.data tbody tr:last-child { border-block-end: 0; }
+table.data tbody tr:hover { background: color-mix(in srgb, var(--lime) 9%, transparent); }
+table.data td.num { font-variant-numeric: tabular-nums; }
+
+.who { display: inline-flex; align-items: center; gap: 11px; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex: none;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--mint) 55%, transparent);
+  font-size: 14px; font-weight: 700; color: var(--ink);
+}
+.who b { font-weight: 700; }
+
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 11px; border-radius: var(--r-pill);
+  font-size: 13px; font-weight: 700; background: var(--secondary); color: var(--text-2);
+}
+.tag-green { background: color-mix(in srgb, var(--green) 20%, transparent); color: #2f7a48; }
+.tag-lime  { background: color-mix(in srgb, var(--lime) 40%, transparent); color: #4a6413; }
+.tag-peach { background: color-mix(in srgb, var(--peach) 48%, transparent); color: #8a4b18; }
+.tag-flat  { background: var(--secondary); color: var(--text-3); }
+
+.pay { font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+.pay-none { color: var(--text-3); }
+
+/* شريط الامتلاء */
+.meter { display: flex; align-items: center; gap: 10px; }
+.meter .bar {
+  width: 78px; height: 7px; border-radius: 99px;
+  background: var(--secondary); overflow: hidden; flex: none;
+}
+.meter .bar i { display: block; height: 100%; border-radius: 99px; background: var(--green); }
+.meter .bar i.full { background: var(--peach); }
+.meter .txt { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--text-2); }
+
+/* ------------------------------------------------------------ التصفّح */
+.pager {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 14px 22px; border-block-start: 1px solid var(--line);
+}
+.pager .info { font-size: 14px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.pager .ctrl { display: flex; gap: 8px; }
+.pager button {
+  min-height: 38px; padding-inline: 15px; border-radius: var(--r-pill);
+  background: var(--secondary); font-size: 14px; font-weight: 700;
+  transition: background-color .2s, opacity .2s;
+}
+.pager button:hover:not(:disabled) { background: var(--line-strong); }
+.pager button:disabled { opacity: .4; cursor: default; }
+
+/* ------------------------------------------------- التحميل والحالة الفارغة */
+.skel { display: block; height: 13px; border-radius: 99px; background: var(--secondary); }
+@keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: .45 } }
+.loading .skel, .stat-card.loading .v { animation: pulse 1.4s var(--ease) infinite; }
+.stat-card.loading .v { color: transparent; background: var(--secondary); border-radius: 10px; }
+
+.empty { padding: 56px 22px; text-align: center; color: var(--text-2); }
+.empty b { display: block; font-size: 17px; color: var(--text); margin-block-end: 6px; }
+
+/* ------------------------------------------------------------- الجوال */
+@media (max-width: 720px) {
+  .admin-top-row { min-height: 60px; }
+  .admin-brand span { display: none; }
+  .admin-who .email { display: none; }
+  .panel-head { padding: 16px; }
+  .search input { width: 100%; }
+  table.data th, table.data td { padding: 12px 16px; }
+  .stat-card { padding: 17px 18px; }
+  .stat-card .v { font-size: 28px; }
+}

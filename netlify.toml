@@ -16,6 +16,21 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Admin dashboard: keep it out of search engines and out of caches.
+# Note: this is not access control — the data itself is gated by Supabase Auth.
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+    Cache-Control = "no-store"
+    Referrer-Policy = "no-referrer"
+
+# Admin dashboard: /admin serves the page without exposing the .html extension.
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
 # Event deep links: when opened without the app, show the branded fallback page (HTTP 200).
 [[redirects]]
   from = "/event/*"

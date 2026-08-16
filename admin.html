@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>لوحة التحكم — تمرين</title>
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="theme-color" content="#f3f3f3" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+
+  <link rel="preload" href="assets/fonts.css?v=2" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="assets/fonts.css?v=2" /></noscript>
+
+  <link rel="stylesheet" href="assets/site.css?v=4" />
+  <link rel="stylesheet" href="assets/admin.css?v=1" />
+</head>
+
+<body class="admin">
+
+<!-- ======================= بوابة الدخول ======================= -->
+<div class="login-wrap" id="login">
+  <form class="login-card" id="loginForm" novalidate>
+    <img class="mark" src="assets/tamrin-icon.png" alt="" width="54" height="54" />
+    <h1>لوحة التحكم</h1>
+    <p class="lede">ادخل بحساب مشرف لعرض المستخدمين والفعاليات.</p>
+
+    <div class="field">
+      <label for="email">البريد الإلكتروني</label>
+      <input type="email" id="email" name="email" autocomplete="username"
+             placeholder="name@example.com" dir="ltr" required />
+    </div>
+
+    <div class="field">
+      <label for="password">كلمة المرور</label>
+      <input type="password" id="password" name="password"
+             autocomplete="current-password" placeholder="••••••••" dir="ltr" required />
+    </div>
+
+    <button type="submit" class="btn btn-primary" id="loginBtn">دخول</button>
+    <p class="form-error" id="loginError" role="alert"></p>
+  </form>
+</div>
+
+<!-- ======================= اللوحة ======================= -->
+<div id="dash" hidden>
+
+  <header class="admin-top">
+    <div class="wrap admin-top-row">
+      <div class="admin-brand">
+        <img src="assets/tamrin-icon.png" alt="" width="34" height="34" />
+        <b>تمرين</b>
+        <span>لوحة التحكم</span>
+      </div>
+      <div class="admin-who">
+        <span class="email" id="whoEmail"></span>
+        <button type="button" class="btn-quiet" id="signOutBtn">خروج</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap admin-main">
+
+    <div class="demo-banner" id="demoBanner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.01" />
+      </svg>
+      <span><b>بيانات تجريبية.</b> الأرقام هنا غير حقيقية — الواجهة لم تُربط بالخادم بعد.</span>
+    </div>
+
+    <!-- الأرقام -->
+    <section class="stat-grid" id="stats" aria-label="ملخص">
+      <div class="stat-card loading"><div class="k">المستخدمون</div><div class="v" id="sUsers">0</div><div class="sub" id="sUsersSub">&nbsp;</div></div>
+      <div class="stat-card loading"><div class="k">الفعاليات النشطة</div><div class="v" id="sEvents">0</div><div class="sub">منشورة وغير ملغاة</div></div>
+      <div class="stat-card loading"><div class="k">المشاركون</div><div class="v" id="sParts">0</div><div class="sub">في الفعاليات النشطة</div></div>
+      <div class="stat-card loading"><div class="k">قيمة الحجوزات</div><div class="v" id="sRev">0</div><div class="sub">ريال — إجمالي النشط</div></div>
+    </section>
+
+    <!-- المفتاح -->
+    <div class="seg" role="tablist" aria-label="الأقسام">
+      <button type="button" role="tab" id="tabUsers" aria-selected="true" aria-controls="panelUsers">المستخدمون</button>
+      <button type="button" role="tab" id="tabEvents" aria-selected="false" aria-controls="panelEvents">الفعاليات النشطة</button>
+    </div>
+
+    <!-- المستخدمون -->
+    <section class="panel" id="panelUsers" role="tabpanel" aria-labelledby="tabUsers">
+      <div class="panel-head">
+        <div>
+          <h2>المستخدمون</h2>
+          <span class="count" id="usersCount">—</span>
+        </div>
+        <label class="search">
+          <span class="sr-only">ابحث في المستخدمين</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+          </svg>
+          <input type="search" id="userSearch" placeholder="ابحث بالاسم أو الرقم" />
+        </label>
+      </div>
+
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr>
+              <th scope="col">الاسم</th>
+              <th scope="col">المركز</th>
+              <th scope="col">رقم STC Pay</th>
+              <th scope="col">المجموعات</th>
+              <th scope="col">تاريخ الانضمام</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+
+      <div class="pager">
+        <span class="info" id="usersInfo">—</span>
+        <div class="ctrl">
+          <button type="button" id="prevBtn" disabled>السابق</button>
+          <button type="button" id="nextBtn" disabled>التالي</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- الفعاليات -->
+    <section class="panel" id="panelEvents" role="tabpanel" aria-labelledby="tabEvents" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>الفعاليات النشطة</h2>
+          <span class="count" id="eventsCount">—</span>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr>
+              <th scope="col">الفعالية</th>
+              <th scope="col">المجموعة</th>
+              <th scope="col">الموقع</th>
+              <th scope="col">الموعد</th>
+              <th scope="col">المشاركون</th>
+              <th scope="col">القطة</th>
+              <th scope="col">الدفع</th>
+              <th scope="col">التسجيل</th>
+            </tr>
+          </thead>
+          <tbody id="eventsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="assets/admin-data.js?v=1"></script>
+<script src="assets/admin.js?v=1"></script>
+</body>
+</html>
