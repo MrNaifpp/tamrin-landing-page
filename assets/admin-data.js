@@ -107,6 +107,10 @@
 
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+  function persist() {
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
+  }
+
   async function signIn(email, password) {
     if (USE_MOCK) {
       await wait(420);                                  // محاكاة زمن الشبكة
@@ -114,22 +118,53 @@
         return { ok: false, error: 'أدخل البريد وكلمة المرور.' };
       }
       session = { email, token: 'mock-token', mock: true };
-      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch (e) {}
+      persist();
       return { ok: true };
     }
 
-    // --- المرحلة القادمة ---------------------------------------------
-    // const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    //   method: 'POST',
-    //   headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ email, password })
-    // });
-    // if (!res.ok) return { ok: false, error: 'بيانات الدخول غير صحيحة.' };
-    // const data = await res.json();
-    // session = { email, token: data.access_token, refresh: data.refresh_token };
-    // sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    // return { ok: true };
-    return { ok: false, error: 'لم يُضبط مفتاح الاتصال بعد.' };
+    let res;
+    try {
+      res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+    } catch (e) {
+      return { ok: false, error: 'تعذّر الاتصال بالخادم.' };
+    }
+
+    if (!res.ok) return { ok: false, error: 'البريد أو كلمة المرور غير صحيحة.' };
+
+    const data = await res.json();
+    session = { email, token: data.access_token, refresh: data.refresh_token };
+
+    // التحقق من الصلاحية فورًا: الحساب قد يكون سليمًا لكنه ليس مشرفًا.
+    // الرفض يأتي من الخادم لا من الواجهة — الدوال ترفض غير المشرف.
+    try {
+      await rpc('admin_overview');
+    } catch (e) {
+      signOut();   // يمسح الجلسة المخزّنة أيضًا، لا المتغيّر فقط
+      return { ok: false, error: 'هذا الحساب ليس حساب مشرف.' };
+    }
+
+    persist();
+    return { ok: true };
+  }
+
+  /** تجديد الجلسة عند انتهاء صلاحية الرمز (ساعة واحدة افتراضيًا). */
+  async function refresh() {
+    if (!session || !session.refresh) return false;
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: session.refresh })
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    session.token = data.access_token;
+    session.refresh = data.refresh_token;
+    persist();
+    return true;
   }
 
   function signOut() {
@@ -148,21 +183,32 @@
 
   function isMock() { return USE_MOCK; }
 
-  /** نداء RPC موحّد — يُستخدم في مرحلة الربط. */
-  // async function rpc(fn, args) {
-  //   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
-  //     method: 'POST',
-  //     headers: {
-  //       apikey: SUPABASE_ANON_KEY,
-  //       Authorization: `Bearer ${session.token}`,
-  //       'Content-Type': 'application/json'
-  //     },
-  //     body: JSON.stringify(args || {})
-  //   });
-  //   if (res.status === 401 || res.status === 403) throw new Error('غير مصرّح');
-  //   if (!res.ok) throw new Error('تعذّر جلب البيانات');
-  //   return res.json();
-  // }
+  /**
+   * نداء RPC موحّد. يُجدّد الرمز مرة واحدة عند 401 ثم يعيد المحاولة.
+   * المفتاح المُرسل هو anon فقط — الصلاحية تأتي من رمز الجلسة.
+   */
+  async function rpc(fn, args, retried) {
+    if (!session) throw new Error('لا توجد جلسة');
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${session.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(args || {})
+    });
+
+    if (res.status === 401 && !retried && await refresh()) {
+      return rpc(fn, args, true);
+    }
+    // 403 أو خطأ الدالة نفسها (42501) = ليس مشرفًا
+    if (res.status === 401 || res.status === 403) throw new Error('غير مصرّح');
+    if (!res.ok) throw new Error('تعذّر جلب البيانات');
+
+    return res.json();
+  }
 
   async function overview() {
     if (USE_MOCK) {
@@ -176,7 +222,7 @@
         revenue: MOCK_EVENTS.reduce((s, e) => s + e.total_price, 0)
       };
     }
-    // return rpc('admin_overview');
+    return rpc('admin_overview');
   }
 
   async function users({ search = '', page = 1, pageSize = 12 } = {}) {
@@ -189,7 +235,9 @@
       const start = (page - 1) * pageSize;
       return { rows: filtered.slice(start, start + pageSize), total: filtered.length };
     }
-    // return rpc('admin_list_users', { p_search: search, p_page: page, p_page_size: pageSize });
+    return rpc('admin_list_users', {
+      p_search: search, p_page: page, p_page_size: pageSize
+    });
   }
 
   async function activeEvents() {
@@ -197,7 +245,7 @@
       await wait(240);
       return MOCK_EVENTS;
     }
-    // return rpc('admin_list_active_events');
+    return rpc('admin_list_active_events');
   }
 
   global.TamrinData = {
