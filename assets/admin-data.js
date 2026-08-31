@@ -16,6 +16,8 @@
                                   activeEvents, totalParticipants, revenue }
      users({ search, page, pageSize })  -> { rows, total }
      activeEvents()          -> [ event ]
+     playerProfile(userId)   -> { user, scale, my_ratings, groups, activity }
+     deleteRating({ raterId, rateeId, workspaceId }) -> { deleted }
    ========================================================================= */
 
 (function (global) {
@@ -43,6 +45,13 @@
   const POSITIONS = ['مهاجم', 'وسط', 'مدافع', 'حارس', 'جناح'];
   const WORKSPACES = ['شباب الحي', 'دفعة 2015', 'زملاء العمل', 'نادي الأربعاء', 'عيال الفريج'];
 
+  // معرّفات للمجموعات: الحمولة الحقيقية تُرجع workspace_id، والحذف يحتاجه.
+  const MOCK_WORKSPACES = WORKSPACES.map((name, i) => ({ id: `w-${i + 1}`, name }));
+
+  // نفس الحدود المُثبَّتة في admin_get_player_profile. تُرسل في الحمولة
+  // لأنّ الواجهة لا يجوز أن تُثبّت مقامًا للأشرطة.
+  const MOCK_SCALE = { min: 1, max: 99 };
+
   const DAY = 86400000;
   const now = Date.now();
 
@@ -67,6 +76,55 @@
       workspace_count: 1 + Math.floor(seeded(i + 91) * 3)
     };
   }).sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+  /* تقييمات تجريبية. المقيّمون مستخدمون حقيقيون من MOCK_USERS حتى تعمل
+     أسماؤهم وصفوفهم كما في الإنتاج. المستخدم الأول u-001 هو «أنا» في
+     وضع التجربة، فيظهر مسار «تقييمي» وشارة «أنت» بلا خادم. */
+  const MOCK_ME = 'u-001';
+
+  const MOCK_RATINGS = (() => {
+    const rows = [];
+    MOCK_USERS.forEach((ratee, ri) => {
+      const groupCount = Math.floor(seeded(ri + 101) * 3);      // 0..2
+      for (let g = 0; g < groupCount; g++) {
+        const ws = MOCK_WORKSPACES[Math.floor(seeded(ri * 7 + g + 103) * MOCK_WORKSPACES.length)];
+        const raterCount = 1 + Math.floor(seeded(ri * 11 + g + 107) * 4);   // 1..4
+        for (let k = 0; k < raterCount; k++) {
+          const rater = MOCK_USERS[Math.floor(seeded(ri * 13 + g * 5 + k + 109) * MOCK_USERS.length)];
+          if (rater.user_id === ratee.user_id) continue;         // لا أحد يقيّم نفسه
+          if (rows.some((x) => x.rater_id === rater.user_id
+                            && x.ratee_id === ratee.user_id
+                            && x.workspace_id === ws.id)) continue;   // المفتاح مركّب
+          const at = (n) => 20 + Math.floor(seeded(ri * 17 + g * 3 + k + n) * 79);
+          rows.push({
+            rater_id: rater.user_id,
+            ratee_id: ratee.user_id,
+            workspace_id: ws.id,
+            pace: at(1), shooting: at(2), passing: at(3),
+            defending: at(4), stamina: at(5), awareness: at(6),
+            created_at: new Date(now - Math.floor(seeded(ri + k + 131) * 60) * DAY).toISOString(),
+            updated_at: new Date(now - Math.floor(seeded(ri + k + 137) * 30) * DAY).toISOString()
+          });
+        }
+      }
+    });
+    // «أنا» أقيّم بعض اللاعبين، حتى لا تكون بطاقة «تقييمي» فارغة دائمًا
+    rows.slice(0, 40).forEach((r, i) => {
+      if (i % 9 !== 0 || r.ratee_id === MOCK_ME) return;
+      if (rows.some((x) => x.rater_id === MOCK_ME
+                        && x.ratee_id === r.ratee_id
+                        && x.workspace_id === r.workspace_id)) return;
+      rows.push(Object.assign({}, r, { rater_id: MOCK_ME }));
+    });
+    return rows;
+  })();
+
+  /* متوسّط بسيط — وضع التجربة لا يعرف الصيغة الموزونة بالمركز، وهي على
+     الخادم. مقصود ألّا يتطابق الرقمان: هذا مسار العرض لا مسار الحساب. */
+  function mockOverall(r) {
+    const keys = ['pace', 'shooting', 'passing', 'defending', 'stamina', 'awareness'];
+    return Math.round(keys.reduce((s, k) => s + Number(r[k] || 0), 0) / keys.length);
+  }
 
   const LOCATIONS = ['ملعب الروضة', 'ملاعب النخبة — حي الياسمين', 'صالة بادل تايم',
                      'ملعب الملقا', 'أكاديمية الصقور', 'ملاعب قرطبة', 'نادي حطين'];
@@ -252,8 +310,91 @@
     return rpc('admin_list_active_events');
   }
 
+  async function playerProfile(userId) {
+    if (USE_MOCK) {
+      await wait(260);
+      const user = MOCK_USERS.find((u) => u.user_id === userId);
+      if (!user) throw new Error('المستخدم غير موجود');
+
+      const mine = MOCK_RATINGS
+        .filter((r) => r.ratee_id === userId && r.rater_id === MOCK_ME)
+        .map((r) => {
+          const ws = MOCK_WORKSPACES.find((w) => w.id === r.workspace_id);
+          return Object.assign({}, r, {
+            workspace_name: ws ? ws.name : '—',
+            overall: mockOverall(r)
+          });
+        });
+
+      const byWorkspace = new Map();
+      MOCK_RATINGS.filter((r) => r.ratee_id === userId).forEach((r) => {
+        if (!byWorkspace.has(r.workspace_id)) byWorkspace.set(r.workspace_id, []);
+        byWorkspace.get(r.workspace_id).push(r);
+      });
+
+      const ATTR = ['pace', 'shooting', 'passing', 'defending', 'stamina', 'awareness'];
+      const groups = [...byWorkspace.entries()].map(([wsId, list]) => {
+        const ws = MOCK_WORKSPACES.find((w) => w.id === wsId);
+        const averages = {};
+        ATTR.forEach((k) => {
+          averages[k] = Math.round(
+            (list.reduce((s, r) => s + Number(r[k] || 0), 0) / list.length) * 10) / 10;
+        });
+        return {
+          workspace_id: wsId,
+          name: ws ? ws.name : '—',
+          rater_count: list.length,
+          overall: mockOverall(averages),
+          averages: averages,
+          raters: list.map((r) => {
+            const ru = MOCK_USERS.find((u) => u.user_id === r.rater_id);
+            return Object.assign({}, r, {
+              name: ru ? ru.name : 'مستخدم محذوف',
+              avatar_url: null,
+              is_me: r.rater_id === MOCK_ME,
+              overall: mockOverall(r)
+            });
+          })
+        };
+      });
+
+      return {
+        user: {
+          user_id: user.user_id, name: user.name, postion: user.postion,
+          avatar_url: user.avatar_url, stc_pay_number: user.stc_pay_number,
+          created_at: user.created_at
+        },
+        scale: MOCK_SCALE,
+        my_ratings: mine,
+        groups: groups,
+        activity: {
+          workspace_count: user.workspace_count,
+          events_joined: 1 + Math.floor(seeded(MOCK_USERS.indexOf(user) + 151) * 14),
+          events_created: Math.floor(seeded(MOCK_USERS.indexOf(user) + 157) * 5)
+        }
+      };
+    }
+    return rpc('admin_get_player_profile', { p_user_id: userId });
+  }
+
+  async function deleteRating({ raterId, rateeId, workspaceId }) {
+    if (USE_MOCK) {
+      await wait(300);
+      const i = MOCK_RATINGS.findIndex((r) => r.rater_id === raterId
+                                           && r.ratee_id === rateeId
+                                           && r.workspace_id === workspaceId);
+      if (i < 0) throw new Error('التقييم غير موجود');
+      MOCK_RATINGS.splice(i, 1);
+      return { deleted: 1 };
+    }
+    return rpc('admin_delete_player_rating', {
+      p_rater_id: raterId, p_ratee_id: rateeId, p_workspace_id: workspaceId
+    });
+  }
+
   global.TamrinData = {
     signIn, signOut, restoreSession, isMock,
-    overview, users, activeEvents
+    overview, users, activeEvents,
+    playerProfile, deleteRating
   };
 })(window);

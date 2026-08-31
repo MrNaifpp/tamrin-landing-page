@@ -993,7 +993,7 @@ Restore the line exactly:
 Confirm nothing else drifted:
 
 ```bash
-git diff assets/admin-data.js | grep -n 'USE_MOCK'
+git diff assets/admin-data.js | grep -n 'USE_MOCK *='
 ```
 
 Expected: no output. If `USE_MOCK` appears in the diff, the temporary edit was not fully reverted.
@@ -1493,7 +1493,7 @@ Confirm visually: the palette is centred, RTL-correct (search icon on the right 
 Revert `USE_MOCK` to `!SUPABASE_ANON_KEY` and confirm:
 
 ```bash
-git diff assets/admin-data.js | grep -n 'USE_MOCK'
+git diff assets/admin-data.js | grep -n 'USE_MOCK *='
 ```
 
 Expected: no output.
@@ -2451,7 +2451,7 @@ Expected: `groupCards` is `0` and `empty` contains `لا تقييمات بعد`.
 Reload the page to restore the mock fixtures (the mock delete mutates an in-memory array), then revert `USE_MOCK`:
 
 ```bash
-git diff assets/admin-data.js | grep -n 'USE_MOCK'
+git diff assets/admin-data.js | grep -n 'USE_MOCK *='
 ```
 
 Expected: no output.
@@ -2569,7 +2569,7 @@ If nothing needed correcting, skip the commit and say so.
 ## Notes for the executing agent
 
 - **The two `console.log`-based checks in Task 4 are temporary scaffolding.** Task 5 Step 4 removes the placeholder `onSelect`. Do not leave a `console.log` in the committed wiring.
-- **`USE_MOCK` must never be committed as `true`.** Every task that flips it ends with a `git diff | grep USE_MOCK` check expecting no output. Honour it.
+- **`USE_MOCK` must never be committed as `true`.** Every task that flips it ends with a `git diff | grep 'USE_MOCK *='` check expecting no output. Match the assignment, not every mention — `if (USE_MOCK)` lines are legitimate. Honour it.
 - **Do not hardcode a rating maximum anywhere.** Task 6 Step 3 has a check that fails if you do.
 - **Do not reimplement the overall formula.** If a number looks wrong, the fix is in the SQL's use of `player_rating_overall`, not a JS calculation.
 - If mock fixtures never produce a needed shape (a player with no ratings, a group with 2+ raters, a single-rating player), adjust the seeds in Task 3 rather than skipping the verification.
