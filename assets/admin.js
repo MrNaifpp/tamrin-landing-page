@@ -228,6 +228,30 @@
   $('tabUsers').addEventListener('click', () => selectTab('users'));
   $('tabEvents').addEventListener('click', () => selectTab('events'));
 
+  /* ---------------------------------------------------- البحث الشامل */
+
+  TamrinSearch.init({
+    onSelect: (userId) => console.log('selected user:', userId)
+  });
+
+  $('searchTrigger').addEventListener('click', () => TamrinSearch.open());
+
+  /* ⌘K / Ctrl+K في أي مكان، و«/» فقط خارج حقول الكتابة حتى لا تُختطف
+     الشرطة من حقل بحث المستخدمين. */
+  document.addEventListener('keydown', (e) => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '')
+                || document.activeElement?.isContentEditable;
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      TamrinSearch.open();
+      return;
+    }
+    if (e.key === '/' && !typing && !TamrinSearch.isOpen()) {
+      e.preventDefault();
+      TamrinSearch.open();
+    }
+  });
+
   /* ----------------------------------------------------------- إقلاع */
 
   function loadAll() {

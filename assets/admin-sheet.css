@@ -1,0 +1,80 @@
+/* =========================================================================
+   تمرين — البحث الشامل وورقة اللاعب
+   تبني على الرموز في site.css. لا تُعيد تعريف أي رمز.
+   ========================================================================= */
+
+/* ------------------------------------------------------- زرّ البحث */
+.cmdk-trigger {
+  display: inline-flex; align-items: center; gap: 9px;
+  min-height: 40px; padding-inline: 14px;
+  border: 1px solid var(--line); border-radius: var(--r-pill);
+  background: var(--card); color: var(--text-3);
+  font-size: 14px; font-weight: 500;
+  transition: border-color .2s, color .2s;
+}
+.cmdk-trigger:hover { border-color: var(--line-strong); color: var(--text-2); }
+.cmdk-trigger svg { width: 17px; height: 17px; flex: none; }
+.cmdk-trigger kbd {
+  font: inherit; font-size: 12px; color: var(--text-3);
+  padding: 2px 6px; border-radius: 7px; background: var(--secondary);
+}
+
+/* --------------------------------------------------- طبقة البحث */
+.cmdk-backdrop {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(20, 20, 20, .32);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  animation: cmdk-fade .18s var(--ease);
+}
+.cmdk {
+  position: fixed; z-index: 91;
+  inset-block-start: 12vh; inset-inline: 0;
+  width: min(560px, calc(100% - 32px)); margin-inline: auto;
+  background: var(--card); border-radius: var(--r-card);
+  box-shadow: var(--shadow-lift); overflow: hidden;
+  animation: cmdk-rise .22s var(--ease);
+}
+@keyframes cmdk-fade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes cmdk-rise {
+  from { opacity: 0; transform: translateY(-10px) }
+  to   { opacity: 1; transform: none }
+}
+
+.cmdk-field {
+  display: flex; align-items: center; gap: 11px;
+  padding: 16px 18px; border-block-end: 1px solid var(--line);
+}
+.cmdk-field svg { width: 19px; height: 19px; flex: none; color: var(--text-3); }
+.cmdk-field input {
+  flex: 1; min-width: 0; min-height: 30px;
+  border: none; background: none; font: inherit; font-size: 16px; color: var(--text);
+}
+.cmdk-field input:focus { outline: none; }
+.cmdk-field input::placeholder { color: var(--text-3); }
+.cmdk-field input::-webkit-search-cancel-button { display: none; }
+.cmdk-esc {
+  font-size: 13px; font-weight: 700; color: var(--text-3);
+  padding: 5px 10px; border-radius: var(--r-pill); background: var(--secondary);
+}
+.cmdk-esc:hover { background: var(--line-strong); }
+
+.cmdk-list { max-height: min(56vh, 420px); overflow-y: auto; padding: 8px; }
+.cmdk-row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 10px 12px; border-radius: 14px; text-align: start;
+  transition: background-color .12s;
+}
+.cmdk-row[aria-selected="true"] { background: var(--secondary); }
+.cmdk-row .nm { font-weight: 700; font-size: 15px; }
+.cmdk-row .meta { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 8px; }
+.cmdk-row .grp { font-size: 13px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.cmdk-hint { padding: 34px 18px; text-align: center; color: var(--text-2); font-size: 14px; }
+.cmdk-hint b { display: block; font-size: 16px; color: var(--text); margin-block-end: 5px; }
+
+@media (max-width: 720px) {
+  .cmdk { inset-block-start: 0; width: 100%; margin-inline: 0;
+          border-start-start-radius: 0; border-start-end-radius: 0; }
+  .cmdk-list { max-height: calc(100vh - 76px); }
+  .cmdk-trigger span, .cmdk-trigger kbd { display: none; }
+  .cmdk-trigger { padding-inline: 11px; }
+}
