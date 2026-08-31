@@ -109,10 +109,10 @@
     return `
       <tr>
         <td>
-          <span class="who">
+          <button type="button" class="who row-open" data-id="${esc(u.user_id)}">
             <span class="avatar" aria-hidden="true">${esc(initials(u.name))}</span>
             <b>${esc(u.name)}</b>
-          </span>
+          </button>
         </td>
         <td><span class="tag tag-flat">${esc(u.postion || '—')}</span></td>
         <td class="num">${pay}</td>
@@ -152,6 +152,13 @@
     clearTimeout(searchTimer);
     const v = e.target.value;
     searchTimer = setTimeout(() => { search = v; page = 1; loadUsers(); }, 220);
+  });
+
+  /* اسم المستخدم يفتح ورقته. زرّ حقيقي: Enter و Space يعملان من نفسهما،
+     والصفّ يبقى صفًّا في شجرة الوصول. */
+  $('usersBody').addEventListener('click', (e) => {
+    const btn = e.target.closest('.row-open');
+    if (btn && btn.dataset.id) TamrinPlayer.open(btn.dataset.id);
   });
 
   $('prevBtn').addEventListener('click', () => { if (page > 1) { page--; loadUsers(); } });
@@ -230,8 +237,9 @@
 
   /* ---------------------------------------------------- البحث الشامل */
 
+  TamrinPlayer.init();
   TamrinSearch.init({
-    onSelect: (userId) => console.log('selected user:', userId)
+    onSelect: (userId) => TamrinPlayer.open(userId)
   });
 
   $('searchTrigger').addEventListener('click', () => TamrinSearch.open());

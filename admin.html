@@ -186,9 +186,32 @@
   <div class="cmdk-list" id="cmdkList" role="listbox" aria-label="نتائج البحث"></div>
 </div>
 
+<!-- ======================= ورقة اللاعب ======================= -->
+<div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true"
+       aria-labelledby="sheetName" hidden>
+  <header class="sheet-head">
+    <div class="who">
+      <span class="avatar" id="sheetAvatar" aria-hidden="true"></span>
+      <span>
+        <b id="sheetName">—</b>
+        <span class="sub" id="sheetSub"></span>
+      </span>
+    </div>
+    <button type="button" class="sheet-x" id="sheetClose" aria-label="إغلاق">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
+    </button>
+  </header>
+  <div class="sheet-body" id="sheetBody"></div>
+</aside>
+
 <script src="assets/admin-data.js?v=5"></script>
 <script src="assets/admin-ratings.js?v=1"></script>
 <script src="assets/admin-search.js?v=1"></script>
+<script src="assets/admin-player.js?v=1"></script>
 <script src="assets/admin.js?v=5"></script>
 </body>
 </html>
