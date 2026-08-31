@@ -33,9 +33,146 @@
 
   /* --------------------------------------------------------- الجسم */
 
-  /** يستبدلها المحتوى الكامل في الخطوة التالية. */
+  /* --------------------------------------------------- عرض التقييمات */
+
+  /** صفوف الصفات الستّ. الشريط يُرسم بنسبة من scale القادم من الخادم؛
+      إن كان المقياس غير صالح عُرض الرقم بلا شريط بدل تخمين مقام. */
+  function attrsHtml(rating, scale) {
+    return `<div class="attrs">${TamrinRatings.attributeRows(rating, scale).map((a) => `
+      <div class="attr">
+        <span class="lbl">${esc(a.label)}</span>
+        ${a.percent === null
+          ? '<span class="meter"><span class="txt">' + (a.value === null ? '—' : num(a.value)) + '</span></span>'
+          : '<span class="meter"><span class="bar"><i style="width:' + a.percent + '%"></i></span>'
+            + '<span class="txt">' + num(a.value) + '</span></span>'}
+      </div>`).join('')}</div>`;
+  }
+
+  function overallHtml(value, label) {
+    return `
+      <div class="ovr">
+        <span class="n">${value === null || value === undefined ? '—' : num(Math.round(value))}</span>
+        <span class="l">${esc(label)}</span>
+      </div>`;
+  }
+
+  function myRatingsHtml(p) {
+    if (!p.my_ratings || !p.my_ratings.length) {
+      return `
+        <section class="blk">
+          <h3>تقييمي</h3>
+          <div class="mine none">لم تُقيّم هذا اللاعب.</div>
+        </section>`;
+    }
+    return `
+      <section class="blk">
+        <h3>تقييمي</h3>
+        ${p.my_ratings.map((m) => `
+          <div class="mine">
+            <div class="mine-top">
+              ${overallHtml(m.overall, 'تقييمي')}
+              <span class="tag tag-flat">${esc(m.workspace_name || '—')}</span>
+            </div>
+            ${attrsHtml(m, p.scale)}
+          </div>`).join('')}
+      </section>`;
+  }
+
+  function raterHtml(r, g, scale) {
+    return `
+      <div class="rater" data-rater="${esc(r.rater_id)}" data-workspace="${esc(g.workspace_id)}">
+        <div class="rater-top">
+          <span class="who">
+            <span class="avatar sm" aria-hidden="true">${esc(initials(r.name))}</span>
+            <b>${esc(r.name)}</b>
+            ${r.is_me ? '<span class="tag tag-lime">أنت</span>' : ''}
+          </span>
+          <span class="rater-right">
+            <span class="score">${r.overall === null || r.overall === undefined
+              ? '—' : num(Math.round(r.overall))}</span>
+            <button type="button" class="del" aria-label="حذف تقييم ${esc(r.name)}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" aria-hidden="true">
+                <path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6" />
+              </svg>
+            </button>
+          </span>
+        </div>
+        ${attrsHtml(r, scale)}
+        <div class="rater-foot">
+          <span>قُيّم في ${esc(asDate(r.created_at))}</span>
+          ${r.updated_at && r.updated_at !== r.created_at
+            ? `<span>عُدّل في ${esc(asDate(r.updated_at))}</span>` : ''}
+        </div>
+        <div class="confirm" hidden>
+          <span>تأكيد الحذف؟</span>
+          <button type="button" class="btn-del-yes">حذف</button>
+          <button type="button" class="btn-del-no">إلغاء</button>
+        </div>
+      </div>`;
+  }
+
+  function groupsHtml(p) {
+    if (!TamrinRatings.hasAnyRatings(p)) {
+      return `
+        <section class="blk">
+          <div class="empty"><b>لا تقييمات بعد</b>لم يقيّم أحد هذا اللاعب حتى الآن.</div>
+        </section>`;
+    }
+    return `
+      <section class="blk">
+        <h3>التقييمات بحسب المجموعة
+          <span class="c">${num(TamrinRatings.totalRaterCount(p))} تقييم</span>
+        </h3>
+        ${TamrinRatings.sortGroups(p.groups).map((g) => `
+          <div class="grp-card">
+            <div class="grp-top">
+              ${overallHtml(g.overall, 'التقييم العام')}
+              <span class="grp-id">
+                <b>${esc(g.name)}</b>
+                <span>${num(g.rater_count)} مقيّم</span>
+              </span>
+            </div>
+            ${attrsHtml(g.averages, p.scale)}
+            <div class="raters">
+              ${TamrinRatings.sortRaters(g.raters).map((r) => raterHtml(r, g, p.scale)).join('')}
+            </div>
+          </div>`).join('')}
+      </section>`;
+  }
+
+  function activityHtml(p) {
+    const a = p.activity || {};
+    const cell = (k, v) => `<div class="a-cell"><span class="k">${esc(k)}</span>`
+                          + `<span class="v">${num(v)}</span></div>`;
+    return `
+      <section class="blk">
+        <h3>النشاط</h3>
+        <div class="act">
+          ${cell('المجموعات', a.workspace_count)}
+          ${cell('فعاليات شارك فيها', a.events_joined)}
+          ${cell('فعاليات أنشأها', a.events_created)}
+        </div>
+      </section>`;
+  }
+
+  function idHtml(p) {
+    const pay = p.user.stc_pay_number
+      ? `<span class="pay" dir="ltr">${esc(p.user.stc_pay_number)}</span>`
+      : '<span class="pay-none">—</span>';
+    return `
+      <section class="blk">
+        <div class="idrow">
+          <span><span class="k">المركز</span>
+            <span class="tag tag-flat">${esc(p.user.postion || '—')}</span></span>
+          <span><span class="k">رقم STC Pay</span> ${pay}</span>
+        </div>
+      </section>`;
+  }
+
+  /* الترتيب مقصود: التقييمات أولًا. النشاط والهوية ثانويان. */
   function body(p) {
-    return `<div class="empty"><b>${esc(p.user.name)}</b>الجسم يأتي في المهمة التالية.</div>`;
+    return idHtml(p) + myRatingsHtml(p) + groupsHtml(p) + activityHtml(p);
   }
 
   function paintHead(p) {
