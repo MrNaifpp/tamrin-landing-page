@@ -240,6 +240,10 @@
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (raw) session = JSON.parse(raw);
     } catch (e) { session = null; }
+    /* جلسة تجريبية محفوظة لا تصلح بعد الربط بالخادم، ولا العكس: الرمز
+       'mock-token' يُرسَل إلى Supabase فيردّه بـ 400، فتظهر اللوحة كأنها
+       داخلة وهي فارغة بلا سبب ظاهر. نُسقط الجلسة المخالفة بدل تمريرها. */
+    if (session && !!session.mock !== USE_MOCK) signOut();
     return session;
   }
 
