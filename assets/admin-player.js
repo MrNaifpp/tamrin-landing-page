@@ -271,9 +271,68 @@
     if (restoreTo && restoreTo.focus) restoreTo.focus();
   }
 
+  /* ------------------------------------------------------- الحذف */
+
+  let toastTimer = null;
+
+  function toast(msg, bad) {
+    clearTimeout(toastTimer);
+    const old = document.querySelector('.sheet-toast');
+    if (old) old.remove();
+    const n = document.createElement('div');
+    n.className = 'sheet-toast' + (bad ? ' bad' : '');
+    n.setAttribute('role', 'status');
+    n.textContent = msg;
+    document.body.appendChild(n);
+    toastTimer = setTimeout(() => n.remove(), 3200);
+  }
+
+  function showConfirm(row, on) {
+    const c = row.querySelector('.confirm');
+    if (!c) return;
+    // صفّ واحد فقط في حالة تأكيد: تأكيدان مفتوحان يدعوان إلى حذف الخطأ
+    if (on) {
+      document.querySelectorAll('.rater .confirm').forEach((x) => { x.hidden = true; });
+    }
+    c.hidden = !on;
+    if (on) {
+      const yes = c.querySelector('.btn-del-yes');
+      if (yes) yes.focus();
+    }
+  }
+
+  /* الحذف لا يُرمَّم في الواجهة: يُعاد جلب الملف. تقييم المجموعة ومتوسّطاتها
+     تتغيّر بحذف صفّ واحد، وترقيع DOM يُظهر رقمًا قديمًا واثقًا. */
+  async function doDelete(row) {
+    const raterId = row.dataset.rater;
+    const workspaceId = row.dataset.workspace;
+    const rateeId = currentId;
+    if (!raterId || !workspaceId || !rateeId) return;
+
+    row.classList.add('busy');
+    try {
+      await TamrinData.deleteRating({ raterId, rateeId, workspaceId });
+      toast('حُذف التقييم.');
+      await load(rateeId);
+    } catch (e) {
+      row.classList.remove('busy');
+      showConfirm(row, false);
+      toast('تعذّر حذف التقييم.', true);
+    }
+  }
+
   function init() {
     $('sheetClose').addEventListener('click', close);
     $('sheetBackdrop').addEventListener('click', close);
+
+    // مفوَّض: صفوف المقيّمين تُعاد بناءً في كل جلب
+    $('sheetBody').addEventListener('click', (e) => {
+      const row = e.target.closest('.rater');
+      if (!row) return;
+      if (e.target.closest('.del'))         { showConfirm(row, true);  return; }
+      if (e.target.closest('.btn-del-no'))  { showConfirm(row, false); return; }
+      if (e.target.closest('.btn-del-yes')) { doDelete(row); }
+    });
   }
 
   global.TamrinPlayer = {
