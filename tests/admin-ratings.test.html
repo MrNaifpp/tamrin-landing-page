@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>اختبارات منطق التقييم</title>
+  <style>
+    body { font: 15px/1.6 system-ui, sans-serif; padding: 24px; background: #f3f3f3; }
+    h1 { font-size: 19px; margin-block-end: 16px; }
+    .pass { color: #2f7a48; }
+    .fail { color: #b3261e; font-weight: 700; }
+    ol { padding-inline-start: 22px; }
+    #summary { margin-block-end: 14px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>اختبارات منطق التقييم — TamrinRatings</h1>
+  <div id="summary">جارٍ التنفيذ…</div>
+  <ol id="out"></ol>
+
+  <script src="../assets/admin-ratings.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    const results = { passed: 0, failed: 0, failures: [] };
+    const out = document.getElementById('out');
+
+    function test(name, fn) {
+      let error = null;
+      try { fn(); } catch (e) { error = e && e.message ? e.message : String(e); }
+      const li = document.createElement('li');
+      if (error) {
+        results.failed++;
+        results.failures.push(name + ': ' + error);
+        li.className = 'fail';
+        li.textContent = 'FAIL — ' + name + ' — ' + error;
+      } else {
+        results.passed++;
+        li.className = 'pass';
+        li.textContent = 'PASS — ' + name;
+      }
+      out.appendChild(li);
+    }
+
+    function eq(actual, expected, what) {
+      const a = JSON.stringify(actual), b = JSON.stringify(expected);
+      if (a !== b) throw new Error((what || 'value') + ' expected ' + b + ' got ' + a);
+    }
+
+    const R = window.TamrinRatings;
+    const SCALE = { min: 1, max: 99 };
+
+    test('ATTRS has the six attributes in fixed order', function () {
+      eq(R.ATTRS.map(function (a) { return a.key; }),
+         ['pace', 'shooting', 'passing', 'defending', 'stamina', 'awareness']);
+    });
+
+    test('ATTRS carries the Arabic labels', function () {
+      eq(R.ATTRS.map(function (a) { return a.label; }),
+         ['السرعة', 'التسديد', 'التمرير', 'الدفاع', 'التحمّل', 'الوعي']);
+    });
+
+    test('barPercent maps min to 0 and max to 100', function () {
+      eq(R.barPercent(1, SCALE), 0, 'min');
+      eq(R.barPercent(99, SCALE), 100, 'max');
+    });
+
+    test('barPercent maps the midpoint to 50', function () {
+      eq(R.barPercent(50, SCALE), 50);
+    });
+
+    test('barPercent clamps out-of-range values', function () {
+      eq(R.barPercent(-20, SCALE), 0, 'below min');
+      eq(R.barPercent(500, SCALE), 100, 'above max');
+    });
+
+    test('barPercent returns null for an unusable scale', function () {
+      eq(R.barPercent(50, null), null, 'null scale');
+      eq(R.barPercent(50, { min: 1, max: 1 }), null, 'zero span');
+      eq(R.barPercent(50, { min: 1, max: 0 }), null, 'inverted');
+      eq(R.barPercent(50, { min: 1, max: 'x' }), null, 'non-numeric max');
+    });
+
+    test('barPercent returns null for a missing value', function () {
+      eq(R.barPercent(null, SCALE), null, 'null');
+      eq(R.barPercent(undefined, SCALE), null, 'undefined');
+    });
+
+    test('attributeRows returns six rows with values and percentages', function () {
+      const rows = R.attributeRows(
+        { pace: 99, shooting: 1, passing: 50, defending: 50, stamina: 50, awareness: 50 },
+        SCALE);
+      eq(rows.length, 6, 'length');
+      eq(rows[0], { key: 'pace', label: 'السرعة', value: 99, percent: 100 }, 'first row');
+      eq(rows[1].percent, 0, 'second percent');
+    });
+
+    test('attributeRows survives a null rating', function () {
+      const rows = R.attributeRows(null, SCALE);
+      eq(rows.length, 6, 'length');
+      eq(rows[0].value, null, 'value');
+      eq(rows[0].percent, null, 'percent');
+    });
+
+    test('hasAnyRatings is false when every group is empty', function () {
+      eq(R.hasAnyRatings({ groups: [] }), false, 'no groups');
+      eq(R.hasAnyRatings({ groups: [{ rater_count: 0, raters: [] }] }), false, 'zero count');
+      eq(R.hasAnyRatings(null), false, 'null profile');
+    });
+
+    test('hasAnyRatings is true when a group has raters', function () {
+      eq(R.hasAnyRatings({ groups: [{ rater_count: 2, raters: [{}, {}] }] }), true);
+    });
+
+    test('totalRaterCount sums across groups', function () {
+      eq(R.totalRaterCount({ groups: [{ rater_count: 2 }, { rater_count: 3 }] }), 5);
+      eq(R.totalRaterCount({ groups: [] }), 0, 'empty');
+      eq(R.totalRaterCount(null), 0, 'null');
+    });
+
+    test('sortGroups puts the most-rated group first', function () {
+      const sorted = R.sortGroups([
+        { name: 'ب', rater_count: 1 },
+        { name: 'أ', rater_count: 4 }
+      ]);
+      eq(sorted.map(function (g) { return g.name; }), ['أ', 'ب']);
+    });
+
+    test('sortGroups breaks ties by name and does not mutate the input', function () {
+      const input = [{ name: 'ب', rater_count: 2 }, { name: 'أ', rater_count: 2 }];
+      const sorted = R.sortGroups(input);
+      eq(sorted.map(function (g) { return g.name; }), ['أ', 'ب'], 'sorted');
+      eq(input.map(function (g) { return g.name; }), ['ب', 'أ'], 'input untouched');
+    });
+
+    test('sortRaters puts me first, then newest', function () {
+      const sorted = R.sortRaters([
+        { name: 'ب', is_me: false, updated_at: '2026-01-01T00:00:00Z' },
+        { name: 'ج', is_me: false, updated_at: '2026-06-01T00:00:00Z' },
+        { name: 'أ', is_me: true,  updated_at: '2025-01-01T00:00:00Z' }
+      ]);
+      eq(sorted.map(function (r) { return r.name; }), ['أ', 'ج', 'ب']);
+    });
+
+    test('sortRaters tolerates a missing updated_at', function () {
+      const sorted = R.sortRaters([
+        { name: 'ب', is_me: false },
+        { name: 'أ', is_me: false, updated_at: '2026-06-01T00:00:00Z' }
+      ]);
+      eq(sorted.map(function (r) { return r.name; }), ['أ', 'ب']);
+    });
+
+    window.__results = results;
+    document.getElementById('summary').textContent =
+      results.failed === 0
+        ? 'نجحت جميع الاختبارات (' + results.passed + ')'
+        : results.failed + ' فشل من ' + (results.passed + results.failed);
+  })();
+  </script>
+</body>
+</html>

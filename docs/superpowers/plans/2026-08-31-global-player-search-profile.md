@@ -369,7 +369,7 @@ mcp__Claude_Browser__navigate    { "url": "http://localhost:4173/tests/admin-rat
 mcp__Claude_Browser__javascript_tool { "action": "javascript_exec", "text": "window.__results" }
 ```
 
-Expected exactly: `{"passed": 15, "failed": 0, "failures": []}`
+Expected exactly: `{"passed": 16, "failed": 0, "failures": []}`
 
 If `failed > 0`, read `failures` — each entry names the test and the expected-vs-got values. Fix `admin-ratings.js`, never the assertion, unless the assertion itself encodes a wrong expectation.
 
