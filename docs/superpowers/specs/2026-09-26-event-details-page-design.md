@@ -87,9 +87,13 @@ does not exist.
   the waitlist, and not in `declined` — whether they have an `invited` row or no
   row at all.
 - Participants ordered by `created_at`, waitlist by `joined_at`.
+- `is_guest` = `user_id is null and not added_manually`. `added_by_name` is the
+  member who brought the guest, or the organiser for manually added rows
+  (`user_id is null and added_manually`).
 
-Delivery: added to `supabase/admin-dashboard.sql` in this repo **and** as a
-migration in the app repo (`~/Documents/tamrin/supabase/migrations`), per the
+Delivery: a new file `supabase/admin-event-details.sql` in this repo **and** the
+same SQL as migration `20260926100000_admin_event_details.sql` on branch
+`admin/event-details` in the app repo (`~/Documents/tamrin`), per the
 2026-09-26 decision to track admin SQL as migrations.
 
 ## 5. UI
@@ -116,8 +120,8 @@ migration in the app repo (`~/Documents/tamrin/supabase/migrations`), per the
    - Group response: registered · declined · no reply, of `group_size`.
    - Waitlist: count.
 3. **Member list** (main) — table: avatar, name, position, registered at, payment
-   badge (مدفوع / معفى / لم يدفع); badges «ضيف» for guests and «أضافه <name>»
-   for manually added. Filter chips: الكل · مدفوع · معفى · لم يدفع · ضيوف, with counts. Clicking a real member opens
+   badge (مدفوع / معفى / لم يدفع); badges «ضيف · مع <name>» for guests and «أضافه <name>»
+   for manually added rows. Filter chips: الكل · مدفوع · معفى · لم يدفع · ضيوف, with counts. Clicking a real member opens
    `TamrinPlayer.open(user_id)`; guest rows are not clickable.
 4. **Declined** — name + reason (`reason_text`, else a label for `reason_code`).
 5. **No reply** — group members who have not responded.
@@ -137,15 +141,17 @@ Empty sections render a short muted line, not an empty table.
 ## 6. Code units
 
 - `assets/admin-event-calc.js` — `TamrinEventCalc`, pure functions only:
-  `summary(details)` (cards), `filterParticipants(list, filter)`,
-  `paceText(details, now)`. No DOM. Tested.
-- `assets/admin-event.js` — `TamrinEvent.init()`, `open(id)`, `close()`; renders
+  `payState(status)`, `summary(details)` (cards), `filterParticipants(list, filter)`,
+  `filterCounts(list)`, `durationText(ms)`, `pace(details, nowMs)` → `null | { kind:
+  'filled' | 'last', text }`. No DOM. Tested (16 cases).
+- `assets/admin-event.js` — `TamrinEvent.init({ onBack, onOpenPlayer })`, `open(id)`, `close()`; renders
   the view, knows nothing about the router.
 - `assets/admin-data.js` — `eventDetails(id)`; mock mode builds details for the
   mock events from `MOCK_USERS` (deterministic via `seeded`).
 - `assets/admin.js` — row click + hash router + wiring to `TamrinPlayer`.
-- `admin.html` — `#eventView` container; styles in `assets/admin-event.css`
-  reusing existing tokens.
+- `admin.html` — `#eventView` container and `id="segTabs"` on the tab bar.
+- `assets/admin-event.css` — view styles reusing existing tokens; resets the
+  global `section { padding-block: 88px }` from `site.css` inside the view.
 
 ## 7. Testing
 
