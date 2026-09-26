@@ -60,9 +60,14 @@ begin
   with active as (
     select e.id, e.total_price
     from public.events e
+    join public.workspaces w on w.id = e.workspace_id
     where e.published_at is not null
       and e.cancelled_at is null
       and coalesce(e.end_date, e.start_date) >= now()
+      -- نفس شرط admin_list_active_events: أكثر من 3 أعضاء مع المالك.
+      and (select count(*) from public.workspace_members m
+            where m.workspace_id = e.workspace_id
+              and m.user_id <> w.owner_id) + 1 > 3
   )
   select json_build_object(
     'totalUsers',
@@ -149,7 +154,7 @@ revoke execute on function public.admin_list_users(text, integer, integer) from 
 grant  execute on function public.admin_list_users(text, integer, integer) to authenticated;
 
 -- ---------------------------------------------- 5) الفعاليات النشطة ---
--- «نشطة» = منشورة، غير ملغاة، ولم ينتهِ موعدها بعد.
+-- «نشطة» = منشورة، غير ملغاة، لم ينتهِ موعدها بعد، وفي مجموعة بأكثر من 3 أعضاء (مع المالك).
 create or replace function public.admin_list_active_events()
 returns json
 language plpgsql
@@ -194,6 +199,12 @@ begin
     where e.published_at is not null
       and e.cancelled_at is null
       and coalesce(e.end_date, e.start_date) >= now()
+      -- المجموعات الصغيرة (3 أعضاء أو أقل مع المالك) غالبًا تجارب لإنشاء
+      -- فعالية، فتُستبعد حتى لا تُفسد الأرقام. نعدّ غير المالك ثم نضيف 1
+      -- لأن المالك قد لا يكون له صف في workspace_members، فلا يُعدّ مرتين.
+      and (select count(*) from public.workspace_members m
+            where m.workspace_id = e.workspace_id
+              and m.user_id <> w.owner_id) + 1 > 3
     order by e.start_date asc
   ) r;
 
