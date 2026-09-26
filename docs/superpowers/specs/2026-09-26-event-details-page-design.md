@@ -37,21 +37,20 @@ From `supabase gen types` on 2026-09-26:
 - `workspace_members(workspace_id, user_id, joined_at)`; `workspaces.owner_id`.
   The owner may have no `workspace_members` row.
 
-### Must be verified on prod before implementing the SQL
+### Status values (verified on prod 2026-09-26)
 
-Run read-only in the SQL editor and record the answers in this spec:
+| column | value | count | meaning here |
+| --- | --- | --- | --- |
+| `event_participants.payment_status` | `confirmed` | 117 | paid |
+| | `waived` | 70 | excused — owes nothing, collected nothing |
+| | `pending` | 46 | not paid yet |
+| `event_member_responses.status` | `invited` | 148 | invited, no answer yet |
+| | `declined` | 19 | declined |
 
-```sql
-select 'payment_status' as col, payment_status as val, count(*) from public.event_participants group by 2
-union all
-select 'response_status', status, count(*) from public.event_member_responses group by 2
-order by 1, 3 desc;
-```
-
-- **payment_status**: only `'confirmed'` = paid is verified. Every other value is
-  shown as "not paid" and its raw value kept for the badge.
-- **response status**: the value(s) meaning "declined" determine the Declined list.
-  Anyone registered counts as registered regardless of response row.
+Any other `payment_status` value that appears later is treated as `pending` and
+shown with its raw value. Registration is read from `event_participants`, not from
+responses: a registered member counts as registered whatever their response row
+says.
 
 ## 4. Data: one RPC
 
@@ -80,10 +79,13 @@ does not exist.
 - `name` for a guest is `guest_name`; for a user, `users.name` via `LEFT JOIN`
   with `'—'` fallback (same pattern as `creator_name`).
 - `paid_amount` = `coalesce(paid_price_per_person, price_per_person)` for
-  `payment_status = 'confirmed'`, else `0`.
+  `payment_status = 'confirmed'`, else `0` (so `waived` and `pending` add nothing).
 - `group_size` = non-owner members + 1 (same counting rule as the list filter).
+- `declined` = response rows with `status = 'declined'` whose user is not a
+  participant.
 - `no_reply` = group members (owner included) who are not participants, not on
-  the waitlist, and have no response row marked declined.
+  the waitlist, and not in `declined` — whether they have an `invited` row or no
+  row at all.
 - Participants ordered by `created_at`, waitlist by `joined_at`.
 
 Delivery: added to `supabase/admin-dashboard.sql` in this repo **and** as a
@@ -108,13 +110,14 @@ migration in the app repo (`~/Documents/tamrin/supabase/migrations`), per the
 2. **Insight cards** (reuse `stat-grid` styling):
    - Seats: `filled / max` + fill bar; filled counts every participant row
      (guests included). No max → show filled only.
-   - Payment: paid people / registered, collected vs expected
-     (`sum(paid_amount)` vs `total_price`).
+   - Payment: paid · waived · pending counts, and collected vs expected
+     (`sum(paid_amount)` vs `price_per_person × (registered − waived)`).
+     Expected excludes waived so a fully settled event reads 100%.
    - Group response: registered · declined · no reply, of `group_size`.
    - Waitlist: count.
 3. **Member list** (main) — table: avatar, name, position, registered at, payment
-   badge; badges «ضيف» for guests and «أضافه <name>» for manually added. Filter
-   chips: الكل · مدفوع · غير مدفوع · ضيوف, with counts. Clicking a real member opens
+   badge (مدفوع / معفى / لم يدفع); badges «ضيف» for guests and «أضافه <name>»
+   for manually added. Filter chips: الكل · مدفوع · معفى · لم يدفع · ضيوف, with counts. Clicking a real member opens
    `TamrinPlayer.open(user_id)`; guest rows are not clickable.
 4. **Declined** — name + reason (`reason_text`, else a label for `reason_code`).
 5. **No reply** — group members who have not responded.
@@ -148,7 +151,8 @@ Empty sections render a short muted line, not an empty table.
 
 - `tests/admin-event.test.html` for `TamrinEventCalc`, same harness style as
   `tests/admin-ratings.test.html`: seat fill with/without max, guests counted,
-  paid vs unpaid split with unknown statuses, collected sum, filter chips, pace
+  paid / waived / pending split with an unknown status falling to pending,
+  collected sum and expected excluding waived, filter chips, pace
   when full / not full / no participants.
 - Browser preview in mock mode, desktop and mobile widths: row click, back,
   refresh on `#event/<id>`, filters, opening a player from the list, not-found id.
