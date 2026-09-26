@@ -16,6 +16,7 @@
                                   activeEvents, totalParticipants, revenue }
      users({ search, page, pageSize })  -> { rows, total }
      activeEvents()          -> [ event ]
+     eventDetails(eventId)   -> { event, participants, waitlist, declined, no_reply, group_size } | null
      playerProfile(userId)   -> { user, scale, my_ratings, groups, activity }
      deleteRating({ raterId, rateeId, workspaceId }) -> { deleted }
    ========================================================================= */
@@ -159,6 +160,82 @@
       published_at: new Date(now - Math.floor(seeded(i + 29) * 6) * DAY).toISOString()
     };
   }).sort((a, b) => a.start_date.localeCompare(b.start_date));
+
+  /* تفاصيل فعالية تجريبية. تُبنى من صف القائمة نفسه حتى تتطابق الأرقام:
+     عدد المسجّلين = participant_count، والمدفوعون = paid_count. */
+  function mockEventDetails(id) {
+    const ev = MOCK_EVENTS.find((e) => e.id === id);
+    if (!ev) return null;
+    const i = Number(id.slice(2));
+
+    // ترتيب ثابت للمستخدمين خاص بهذه الفعالية
+    const pool = MOCK_USERS
+      .map((u, k) => ({ u, r: seeded(i * 97 + k) }))
+      .sort((a, b) => a.r - b.r)
+      .map((x) => x.u);
+
+    const guests = Math.min(2, Math.floor(seeded(i + 131) * 3));
+    const memberSeats = ev.participant_count - guests;
+    const published = Date.parse(ev.published_at);
+    const step = (1 + Math.floor(seeded(i + 137) * 5)) * 3600000;
+    const at = (k) => new Date(Math.min(now, published + (k + 1) * step)).toISOString();
+    const status = (k) => (k < ev.paid_count ? 'confirmed'
+      : seeded(i * 17 + k) > 0.6 ? 'waived' : 'pending');
+
+    const participants = [];
+    for (let k = 0; k < ev.participant_count; k++) {
+      const st = status(k);
+      if (k < memberSeats) {
+        const u = pool[k];
+        participants.push({
+          id: `${id}-p${k}`, user_id: u.user_id, name: u.name, avatar_url: null,
+          postion: u.postion, is_guest: false, added_manually: false, added_by_name: null,
+          payment_status: st, paid_amount: st === 'confirmed' ? ev.price_per_person : 0,
+          registered_at: at(k)
+        });
+      } else {
+        const host = pool[k - memberSeats];
+        participants.push({
+          id: `${id}-p${k}`, user_id: null, name: `ضيف ${k - memberSeats + 1}`, avatar_url: null,
+          postion: null, is_guest: true, added_manually: false, added_by_name: host.name,
+          payment_status: st, paid_amount: st === 'confirmed' ? ev.price_per_person : 0,
+          registered_at: at(k)
+        });
+      }
+    }
+
+    let next = memberSeats;
+    const take = (n) => { const out = pool.slice(next, next + n); next += n; return out; };
+    const waitlist = take(ev.waitlist_count).map((u, k) => ({
+      user_id: u.user_id, name: u.name, avatar_url: null,
+      joined_at: new Date(Math.min(now, published + (ev.participant_count + k + 1) * step)).toISOString()
+    }));
+    const reasons = ['مسافر', 'عندي دوام', null, 'إصابة'];
+    const declined = take(1 + Math.floor(seeded(i + 139) * 3)).map((u, k) => ({
+      user_id: u.user_id, name: u.name, avatar_url: null,
+      reason_code: null, reason_text: reasons[(i + k) % reasons.length],
+      responded_at: new Date(Math.min(now, published + (k + 2) * step)).toISOString()
+    }));
+    const noReply = take(Math.floor(seeded(i + 149) * 5)).map((u) => ({
+      user_id: u.user_id, name: u.name, avatar_url: null
+    }));
+
+    return {
+      event: {
+        id: ev.id, name: ev.name, description: '', workspace_id: null,
+        workspace_name: ev.workspace_name, creator_name: ev.creator_name,
+        location: ev.location, start_date: ev.start_date, end_date: ev.end_date,
+        price_per_person: ev.price_per_person, total_price: ev.total_price,
+        max_participants: ev.max_participants, registration_locked: ev.registration_locked,
+        published_at: ev.published_at, cancelled_at: null
+      },
+      participants,
+      waitlist,
+      declined,
+      no_reply: noReply,
+      group_size: memberSeats + waitlist.length + declined.length + noReply.length
+    };
+  }
 
   /* ==================================================================
      التنفيذ — استبدل الأجسام هنا عند الربط بالخادم
@@ -314,6 +391,14 @@
     return rpc('admin_list_active_events');
   }
 
+  async function eventDetails(eventId) {
+    if (USE_MOCK) {
+      await wait(260);
+      return mockEventDetails(eventId);
+    }
+    return rpc('admin_event_details', { p_event_id: eventId });
+  }
+
   async function playerProfile(userId) {
     if (USE_MOCK) {
       await wait(260);
@@ -398,7 +483,7 @@
 
   global.TamrinData = {
     signIn, signOut, restoreSession, isMock,
-    overview, users, activeEvents,
+    overview, users, activeEvents, eventDetails,
     playerProfile, deleteRating
   };
 })(window);
