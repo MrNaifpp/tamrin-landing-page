@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>اختبارات منطق الفعالية</title>
+  <style>
+    body { font: 15px/1.6 system-ui, sans-serif; padding: 24px; background: #f3f3f3; }
+    h1 { font-size: 19px; margin-block-end: 16px; }
+    .pass { color: #2f7a48; }
+    .fail { color: #b3261e; font-weight: 700; }
+    ol { padding-inline-start: 22px; }
+    #summary { margin-block-end: 14px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>اختبارات منطق الفعالية — TamrinEventCalc</h1>
+  <div id="summary">جارٍ التنفيذ…</div>
+  <ol id="out"></ol>
+
+  <script src="../assets/admin-event-calc.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    const results = { passed: 0, failed: 0, failures: [] };
+    const out = document.getElementById('out');
+
+    function test(name, fn) {
+      let error = null;
+      try { fn(); } catch (e) { error = e && e.message ? e.message : String(e); }
+      const li = document.createElement('li');
+      if (error) {
+        results.failed++;
+        results.failures.push(name + ': ' + error);
+        li.className = 'fail';
+        li.textContent = 'FAIL — ' + name + ' — ' + error;
+      } else {
+        results.passed++;
+        li.className = 'pass';
+        li.textContent = 'PASS — ' + name;
+      }
+      out.appendChild(li);
+    }
+
+    function eq(actual, expected, what) {
+      const a = JSON.stringify(actual), b = JSON.stringify(expected);
+      if (a !== b) throw new Error((what || 'value') + ' expected ' + b + ' got ' + a);
+    }
+
+    const C = window.TamrinEventCalc;
+    const H = 3600000;
+    const T0 = Date.parse('2026-09-20T10:00:00Z');
+    const iso = function (ms) { return new Date(ms).toISOString(); };
+
+    function part(o) {
+      return Object.assign({ id: 'p', user_id: 'u', name: 'x', is_guest: false,
+        added_manually: false, payment_status: 'pending', paid_amount: 0,
+        registered_at: iso(T0) }, o);
+    }
+    function details(parts, o) {
+      return Object.assign({
+        event: { price_per_person: 30, max_participants: 4, published_at: iso(T0) },
+        participants: parts, waitlist: [], declined: [], no_reply: [], group_size: 10
+      }, o);
+    }
+
+    test('payState maps the verified statuses', function () {
+      eq(C.payState('confirmed'), 'paid');
+      eq(C.payState('waived'), 'waived');
+      eq(C.payState('pending'), 'pending');
+    });
+
+    test('payState treats unknown or missing status as pending', function () {
+      eq(C.payState('refunded'), 'pending', 'unknown');
+      eq(C.payState(null), 'pending', 'null');
+    });
+
+    test('summary counts seats and fill percent, guests included', function () {
+      const s = C.summary(details([part({}), part({ user_id: null, is_guest: true })]));
+      eq(s.filled, 2, 'filled'); eq(s.max, 4, 'max'); eq(s.seatPct, 50, 'pct'); eq(s.full, false, 'full');
+    });
+
+    test('summary without max has null seatPct and is never full', function () {
+      const d = details([part({})]); d.event.max_participants = null;
+      const s = C.summary(d);
+      eq(s.max, null, 'max'); eq(s.seatPct, null, 'pct'); eq(s.full, false, 'full');
+    });
+
+    test('summary caps seatPct at 100 and flags full', function () {
+      const d = details([part({}), part({}), part({})]); d.event.max_participants = 2;
+      const s = C.summary(d);
+      eq(s.seatPct, 100, 'pct'); eq(s.full, true, 'full');
+    });
+
+    test('summary splits paid / waived / pending, unknown falls to pending', function () {
+      const s = C.summary(details([
+        part({ payment_status: 'confirmed', paid_amount: 30 }),
+        part({ payment_status: 'waived' }),
+        part({ payment_status: 'pending' }),
+        part({ payment_status: 'weird' })
+      ]));
+      eq([s.paid, s.waived, s.pending], [1, 1, 2]);
+    });
+
+    test('summary collected sums paid_amount, expected excludes waived', function () {
+      const s = C.summary(details([
+        part({ payment_status: 'confirmed', paid_amount: 30 }),
+        part({ payment_status: 'confirmed', paid_amount: 25 }),
+        part({ payment_status: 'waived' }),
+        part({ payment_status: 'pending' })
+      ]));
+      eq(s.collected, 55, 'collected'); eq(s.expected, 90, 'expected'); eq(s.collectedPct, 61, 'pct');
+    });
+
+    test('summary collectedPct is null when nothing is expected', function () {
+      const s = C.summary(details([part({ payment_status: 'waived' })]));
+      eq(s.expected, 0, 'expected'); eq(s.collectedPct, null, 'pct');
+    });
+
+    test('summary counts distinct registered members and response lists', function () {
+      const s = C.summary(details(
+        [part({ user_id: 'a' }), part({ user_id: 'a' }), part({ user_id: null, is_guest: true }), part({ user_id: 'b' })],
+        { declined: [{}, {}], no_reply: [{}], waitlist: [{}, {}, {}], group_size: 9 }));
+      eq([s.registeredMembers, s.declined, s.noReply, s.waitlist, s.groupSize], [2, 2, 1, 3, 9]);
+    });
+
+    test('filterParticipants and filterCounts agree for every chip', function () {
+      const list = [
+        part({ id: '1', payment_status: 'confirmed' }),
+        part({ id: '2', payment_status: 'waived' }),
+        part({ id: '3', payment_status: 'pending', user_id: null, is_guest: true }),
+        part({ id: '4', payment_status: 'x', user_id: null, added_manually: true })
+      ];
+      const ids = function (f) { return C.filterParticipants(list, f).map(function (p) { return p.id; }); };
+      eq(ids('all'), ['1', '2', '3', '4'], 'all');
+      eq(ids('paid'), ['1'], 'paid');
+      eq(ids('waived'), ['2'], 'waived');
+      eq(ids('pending'), ['3', '4'], 'pending');
+      eq(ids('guests'), ['3', '4'], 'guests');
+      eq(C.filterCounts(list), { all: 4, paid: 1, waived: 1, pending: 2, guests: 2 }, 'counts');
+    });
+
+    test('durationText uses Arabic dual and plural forms', function () {
+      eq(C.durationText(30 * 1000), 'أقل من دقيقة', '<1m');
+      eq(C.durationText(1 * 60000), 'دقيقة', '1m');
+      eq(C.durationText(2 * 60000), 'دقيقتين', '2m');
+      eq(C.durationText(5 * 60000), '5 دقائق', '5m');
+      eq(C.durationText(45 * 60000), '45 دقيقة', '45m');
+      eq(C.durationText(1 * H), 'ساعة', '1h');
+      eq(C.durationText(2 * H), 'ساعتين', '2h');
+      eq(C.durationText(7 * H), '7 ساعات', '7h');
+      eq(C.durationText(30 * H), '30 ساعة', '30h');
+      eq(C.durationText(48 * H), 'يومين', '2d');
+      eq(C.durationText(24 * 4 * H), '4 أيام', '4d');
+      eq(C.durationText(24 * 12 * H), '12 يوم', '12d');
+    });
+
+    test('pace is null with no participants', function () {
+      eq(C.pace(details([]), T0 + H), null);
+    });
+
+    test('pace reports time to fill from publishing when full', function () {
+      const d = details([
+        part({ registered_at: iso(T0 + 1 * H) }),
+        part({ registered_at: iso(T0 + 3 * H) })
+      ]);
+      d.event.max_participants = 2;
+      eq(C.pace(d, T0 + 50 * H), { kind: 'filled', text: 'اكتمل خلال 3 ساعات من النشر' });
+    });
+
+    test('pace uses the registration that reached max, not the last one', function () {
+      const d = details([
+        part({ registered_at: iso(T0 + 5 * H) }),
+        part({ registered_at: iso(T0 + 2 * H) }),
+        part({ registered_at: iso(T0 + 9 * H) })
+      ]);
+      d.event.max_participants = 2;
+      eq(C.pace(d, T0 + 50 * H).text, 'اكتمل خلال 5 ساعات من النشر');
+    });
+
+    test('pace reports the last registration when not full', function () {
+      const d = details([
+        part({ registered_at: iso(T0 + 1 * H) }),
+        part({ registered_at: iso(T0 + 4 * H) })
+      ]);
+      eq(C.pace(d, T0 + 6 * H), { kind: 'last', text: 'آخر تسجيل قبل ساعتين' });
+    });
+
+    test('pace falls back to last registration when full but never published', function () {
+      const d = details([part({ registered_at: iso(T0) })]);
+      d.event.max_participants = 1; d.event.published_at = null;
+      eq(C.pace(d, T0 + 2 * H).kind, 'last');
+    });
+
+    window.__results = results;
+    document.getElementById('summary').textContent =
+      results.failed === 0
+        ? 'نجحت جميع الاختبارات (' + results.passed + ')'
+        : results.failed + ' فشل من ' + (results.passed + results.failed);
+  })();
+  </script>
+</body>
+</html>
