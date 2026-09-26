@@ -1,0 +1,47 @@
+/* تمرين — صفحة الفعالية. تعيد استخدام بطاقات ولوحات admin.css. */
+
+.ev-top { margin-block-end: 14px; }
+.ev-back { display: inline-flex; align-items: center; gap: 6px; }
+.ev-back svg { width: 16px; height: 16px; }
+
+.ev-head { padding: 22px; margin-block-end: 18px; }
+.ev-head h1 { font-size: 23px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-block-end: 14px; }
+.ev-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px 20px; margin: 0; }
+.ev-meta dt { font-size: 13px; color: var(--text-3); font-weight: 700; margin-block-end: 3px; }
+.ev-meta dd { margin: 0; font-size: 15px; }
+
+.ev-cards .stat-card .v small { font-size: .55em; color: var(--text-3); font-weight: 500; }
+.ev-cards .meter { margin-block-start: 8px; }
+.ev-cards .meter .bar { flex: 1; }
+
+.ev-pace { margin-block: 4px 18px; font-size: 14px; color: var(--text-2); }
+.ev-pace.on { color: #2f7a48; font-weight: 700; }
+
+.ev-members { margin-block-end: 18px; }
+.ev-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ev-chips button {
+  border: 1px solid var(--line-strong); background: var(--card); color: var(--text-2);
+  border-radius: var(--r-pill); padding: 5px 12px; font: inherit; font-size: 14px; cursor: pointer;
+}
+.ev-chips button span { color: var(--text-3); font-variant-numeric: tabular-nums; }
+.ev-chips button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.ev-chips button[aria-pressed="true"] span { color: rgba(255, 255, 255, .7); }
+
+.ev-sub { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; color: var(--text-3); margin-block-start: 2px; }
+.ev-raw { font-size: 12px; color: var(--text-3); }
+
+tr.row-link { cursor: pointer; }
+tr.row-link:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+
+.ev-lists { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.ev-list ol { list-style: none; margin: 0; padding: 4px 18px 16px; display: grid; gap: 12px; }
+.ev-none { padding: 4px 18px 18px; margin: 0; color: var(--text-3); font-size: 14px; }
+
+@media (max-width: 960px) {
+  .ev-lists { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .ev-head { padding: 18px 16px; }
+  .ev-head h1 { font-size: 20px; }
+  .ev-members .panel-head { flex-direction: column; align-items: flex-start; gap: 10px; }
+}

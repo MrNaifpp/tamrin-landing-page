@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="assets/site.css?v=4" />
   <link rel="stylesheet" href="assets/admin.css?v=5" />
   <link rel="stylesheet" href="assets/admin-sheet.css?v=1" />
+  <link rel="stylesheet" href="assets/admin-event.css?v=1" />
 </head>
 
 <body class="admin">
@@ -89,7 +90,7 @@
     </section>
 
     <!-- المفتاح -->
-    <div class="seg" role="tablist" aria-label="الأقسام">
+    <div class="seg" id="segTabs" role="tablist" aria-label="الأقسام">
       <button type="button" role="tab" id="tabUsers" aria-selected="true" aria-controls="panelUsers">المستخدمون</button>
       <button type="button" role="tab" id="tabEvents" aria-selected="false" aria-controls="panelEvents">الفعاليات النشطة</button>
     </div>
@@ -164,6 +165,9 @@
       </div>
     </section>
 
+    <!-- تفاصيل الفعالية -->
+    <section id="eventView" class="ev" aria-live="polite" hidden></section>
+
   </main>
 </div>
 
@@ -208,10 +212,12 @@
   <div class="sheet-body" id="sheetBody"></div>
 </aside>
 
-<script src="assets/admin-data.js?v=5"></script>
+<script src="assets/admin-data.js?v=6"></script>
 <script src="assets/admin-ratings.js?v=1"></script>
 <script src="assets/admin-search.js?v=1"></script>
 <script src="assets/admin-player.js?v=1"></script>
-<script src="assets/admin.js?v=5"></script>
+<script src="assets/admin-event-calc.js?v=1"></script>
+<script src="assets/admin-event.js?v=1"></script>
+<script src="assets/admin.js?v=6"></script>
 </body>
 </html>
