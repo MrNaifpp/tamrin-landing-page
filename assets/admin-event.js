@@ -78,7 +78,7 @@
   }
 
   function cardsHtml(s) {
-    const seats = s.max ? `${num(s.filled)}/${num(s.max)}` : num(s.filled);
+    const seats = s.max ? `${num(s.filled)}<small>/${num(s.max)}</small>` : num(s.filled);
     const collected = s.collectedPct === null
       ? `${num(s.collected)} ريال`
       : `${num(s.collected)} من ${num(s.expected)} ريال`;

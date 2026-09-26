@@ -177,8 +177,12 @@
     const guests = Math.min(2, Math.floor(seeded(i + 131) * 3));
     const memberSeats = ev.participant_count - guests;
     const published = Date.parse(ev.published_at);
-    const step = (1 + Math.floor(seeded(i + 137) * 5)) * 3600000;
-    const at = (k) => new Date(Math.min(now, published + (k + 1) * step)).toISOString();
+    // التسجيلات موزّعة بين النشر والآن. الفعالية المنشورة اليوم تُمدّ نافذتها
+    // إلى الوراء حتى لا تقع كل التسجيلات في اللحظة نفسها.
+    const span = Math.max(now - published, 6 * 3600000);
+    const step = span / (ev.participant_count + ev.waitlist_count + 4);
+    const base = now - span;
+    const at = (k) => new Date(base + (k + 1) * step).toISOString();
     const status = (k) => (k < ev.paid_count ? 'confirmed'
       : seeded(i * 17 + k) > 0.6 ? 'waived' : 'pending');
 
@@ -208,13 +212,13 @@
     const take = (n) => { const out = pool.slice(next, next + n); next += n; return out; };
     const waitlist = take(ev.waitlist_count).map((u, k) => ({
       user_id: u.user_id, name: u.name, avatar_url: null,
-      joined_at: new Date(Math.min(now, published + (ev.participant_count + k + 1) * step)).toISOString()
+      joined_at: at(ev.participant_count + k)
     }));
     const reasons = ['مسافر', 'عندي دوام', null, 'إصابة'];
     const declined = take(1 + Math.floor(seeded(i + 139) * 3)).map((u, k) => ({
       user_id: u.user_id, name: u.name, avatar_url: null,
       reason_code: null, reason_text: reasons[(i + k) % reasons.length],
-      responded_at: new Date(Math.min(now, published + (k + 2) * step)).toISOString()
+      responded_at: at(k + 1)
     }));
     const noReply = take(Math.floor(seeded(i + 149) * 5)).map((u) => ({
       user_id: u.user_id, name: u.name, avatar_url: null

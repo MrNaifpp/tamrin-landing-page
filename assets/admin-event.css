@@ -1,12 +1,16 @@
 /* تمرين — صفحة الفعالية. تعيد استخدام بطاقات ولوحات admin.css. */
 
+/* site.css يضع section { padding-block: 88px } لأقسام الصفحة العامة —
+   نفس الإلغاء في admin-sheet.css. */
+.ev, .ev section { padding-block: 0; }
+
 .ev-top { margin-block-end: 14px; }
 .ev-back { display: inline-flex; align-items: center; gap: 6px; }
 .ev-back svg { width: 16px; height: 16px; }
 
 .ev-head { padding: 22px; margin-block-end: 18px; }
 .ev-head h1 { font-size: 23px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-block-end: 14px; }
-.ev-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px 20px; margin: 0; }
+.ev-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px 20px; margin: 0; }
 .ev-meta dt { font-size: 13px; color: var(--text-3); font-weight: 700; margin-block-end: 3px; }
 .ev-meta dd { margin: 0; font-size: 15px; }
 

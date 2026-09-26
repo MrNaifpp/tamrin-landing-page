@@ -48,6 +48,7 @@
     $('whoEmail').textContent = session.email || '';
     $('demoBanner').hidden = !TamrinData.isMock();
     loadAll();
+    route();
   }
 
   $('loginForm').addEventListener('submit', async (e) => {
@@ -189,7 +190,7 @@
       : '<span class="tag tag-lime">مفتوح</span>';
 
     return `
-      <tr>
+      <tr class="row-link" tabindex="0" data-event="${esc(ev.id)}">
         <td><b>${esc(ev.name)}</b>${wait}</td>
         <td>
           <span class="who">
@@ -223,9 +224,30 @@
     }
   }
 
+  // يُعلَّم عند الدخول من الجدول حتى يعود «رجوع» بالمتصفّح بدل مسح العنوان
+  let cameFromDash = false;
+
+  function openEventRow(tr) {
+    if (!tr || !tr.dataset.event) return;
+    cameFromDash = true;
+    location.hash = `event/${encodeURIComponent(tr.dataset.event)}`;
+  }
+
+  $('eventsBody').addEventListener('click', (e) => openEventRow(e.target.closest('tr.row-link')));
+  $('eventsBody').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const tr = e.target.closest('tr.row-link');
+    if (!tr) return;
+    e.preventDefault();
+    openEventRow(tr);
+  });
+
   /* --------------------------------------------------------- الأقسام */
 
+  let lastTab = 'users';
+
   function selectTab(which) {
+    lastTab = which;
     const users = which === 'users';
     $('tabUsers').setAttribute('aria-selected', String(users));
     $('tabEvents').setAttribute('aria-selected', String(!users));
@@ -235,9 +257,43 @@
   $('tabUsers').addEventListener('click', () => selectTab('users'));
   $('tabEvents').addEventListener('click', () => selectTab('events'));
 
+  /* ------------------------------------------------------- الموجّه */
+
+  function route() {
+    const m = /^#event\/(.+)$/.exec(location.hash);
+    const onEvent = !!m;
+    $('stats').hidden = onEvent;
+    $('segTabs').hidden = onEvent;
+    if (onEvent) {
+      lastTab = 'events';            // «رجوع» يعيد إلى جدول الفعاليات
+      $('panelUsers').hidden = true;
+      $('panelEvents').hidden = true;
+      TamrinEvent.open(decodeURIComponent(m[1]));
+    } else {
+      TamrinEvent.close();
+      selectTab(lastTab);
+    }
+  }
+
+  function backToDash() {
+    if (cameFromDash) {
+      cameFromDash = false;
+      history.back();
+      return;
+    }
+    history.pushState(null, '', location.pathname + location.search);
+    route();
+  }
+
+  window.addEventListener('hashchange', () => { if (!dash.hidden) route(); });
+
   /* ---------------------------------------------------- البحث الشامل */
 
   TamrinPlayer.init();
+  TamrinEvent.init({
+    onBack: backToDash,
+    onOpenPlayer: (userId) => TamrinPlayer.open(userId)
+  });
   TamrinSearch.init({
     onSelect: (userId) => TamrinPlayer.open(userId)
   });
