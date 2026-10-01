@@ -41,10 +41,41 @@ tr.row-link:focus-visible { outline: 2px solid var(--green); outline-offset: -2p
 .ev-list ol { list-style: none; margin: 0; padding: 4px 18px 16px; display: grid; gap: 12px; }
 .ev-none { padding: 4px 18px 18px; margin: 0; color: var(--text-3); font-size: 14px; }
 
+/* -------------------------------------------- التبويبان والتاريخ */
+
+.ev-tabs { display: flex; width: fit-content; max-width: 100%; }
+.ev-tabs button span { color: var(--text-3); font-weight: 500; }
+
+.ev-hist-list { display: grid; gap: 12px; }
+.ev-hist {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r-card); box-shadow: var(--shadow-card); overflow: hidden;
+}
+.ev-hist-head {
+  width: 100%; display: grid; grid-template-columns: 170px 1fr auto 18px;
+  align-items: center; gap: 14px; padding: 16px 20px;
+  text-align: start; font: inherit; color: inherit; background: none; border: 0; cursor: pointer;
+}
+.ev-hist-head:hover { background: color-mix(in srgb, var(--lime) 9%, transparent); }
+.ev-hist-head:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+.ev-hist-when { font-size: 14px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.ev-hist-name { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ev-hist-stats { font-size: 14px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.ev-hist-chev { width: 18px; height: 18px; color: var(--text-3); transition: transform .2s var(--ease); }
+.ev-hist-head[aria-expanded="true"] .ev-hist-chev { transform: rotate(180deg); }
+.ev-hist-body { border-block-start: 1px solid var(--line); }
+.ev-hist-body .ev-none { padding: 16px 20px; }
+.ev-hist-wait { padding: 22px; }
+.ev-hist-more { display: flex; align-items: center; justify-content: center; gap: 10px; margin-block-start: 16px; }
+
 @media (max-width: 960px) {
   .ev-lists { grid-template-columns: 1fr; }
 }
 @media (max-width: 720px) {
+  .ev-tabs button { padding-inline: 12px; font-size: 14px; }
+  .ev-hist-head { grid-template-columns: 1fr 18px; gap: 4px 10px; padding: 14px 16px; }
+  .ev-hist-when, .ev-hist-name, .ev-hist-stats { grid-column: 1; }
+  .ev-hist-chev { grid-column: 2; grid-row: 1 / span 3; }
   .ev-head { padding: 18px 16px; }
   .ev-head h1 { font-size: 20px; }
   .ev-members .panel-head { flex-direction: column; align-items: flex-start; gap: 10px; }

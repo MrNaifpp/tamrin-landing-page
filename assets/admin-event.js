@@ -144,11 +144,39 @@
     return p ? `<p class="ev-pace ${p.kind === 'filled' ? 'on' : ''}">${esc(p.text)}</p>` : '';
   }
 
+  function tabsHtml() {
+    return `
+      <div class="seg ev-tabs" role="tablist" aria-label="أقسام الفعالية">
+        <button type="button" role="tab" id="evTabThis" data-tab="this"
+                aria-selected="true" aria-controls="evPaneThis">هذه الفعالية</button>
+        <button type="button" role="tab" id="evTabPast" data-tab="past"
+                aria-selected="false" aria-controls="evPanePast">فعاليات المجموعة السابقة <span id="evPastCount"></span></button>
+      </div>`;
+  }
+
+  function selectPane(which) {
+    const past = which === 'past';
+    $('evTabThis').setAttribute('aria-selected', String(!past));
+    $('evTabPast').setAttribute('aria-selected', String(past));
+    $('evPaneThis').hidden = past;
+    $('evPanePast').hidden = !past;
+  }
+
   /* --------------------------------------------------------- حالات */
 
   function render() {
-    $('eventView').innerHTML = headHtml(details.event) + cardsHtml(C().summary(details))
-      + paceHtml(details) + membersHtml() + listsHtml(details);
+    $('eventView').innerHTML = headHtml(details.event) + tabsHtml()
+      + `<div id="evPaneThis" role="tabpanel" aria-labelledby="evTabThis">`
+      + cardsHtml(C().summary(details)) + paceHtml(details) + membersHtml() + listsHtml(details)
+      + `</div><div id="evPanePast" role="tabpanel" aria-labelledby="evTabPast" hidden></div>`;
+
+    TamrinEventHistory.mount($('evPanePast'), {
+      workspaceId: details.event.workspace_id,
+      onCount: (n) => {
+        const el = $('evPastCount');
+        if (el) el.textContent = n === null ? '' : `(${num(n)})`;
+      }
+    });
   }
 
   function renderLoading() {
@@ -169,6 +197,7 @@
 
   async function load(id) {
     const my = ++seq;
+    TamrinEventHistory.reset();
     details = null;
     filter = 'all';
     renderLoading();
@@ -199,6 +228,9 @@
       if (act && act.dataset.act === 'back') { opts.onBack(); return; }
       if (act && act.dataset.act === 'retry') { load(currentId); return; }
 
+      const tab = e.target.closest('[data-tab]');
+      if (tab && details) { selectPane(tab.dataset.tab); return; }
+
       const chip = e.target.closest('[data-filter]');
       if (chip && details) {
         filter = chip.dataset.filter;
@@ -227,6 +259,7 @@
 
   function close() {
     seq++;
+    TamrinEventHistory.reset();
     currentId = null;
     details = null;
     $('eventView').hidden = true;
