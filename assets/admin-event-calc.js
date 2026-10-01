@@ -103,12 +103,34 @@
     return { kind: 'last', text: `آخر تسجيل قبل ${durationText(nowMs - times[times.length - 1])}` };
   }
 
+  /* هل بقيت صفحات؟ أي مُدخل غير صالح يعني «لا» بدل زرّ لا يجلب شيئًا. */
+  function hasMore(page, pageSize, total) {
+    const p = Number(page), s = Number(pageSize), t = Number(total);
+    if (!(p > 0) || !(s > 0) || !(t > 0)) return false;
+    return p * s < t;
+  }
+
+  /* دمج صفحة جديدة بلا تكرار: إن انزاحت الصفحات بين طلبين (فعالية انتهت
+     للتوّ) يبقى أول ظهور للصف فقط. */
+  function mergeById(existing, incoming) {
+    const seen = new Set();
+    const out = [];
+    (existing || []).concat(incoming || []).forEach((r) => {
+      if (!r || seen.has(r.id)) return;
+      seen.add(r.id);
+      out.push(r);
+    });
+    return out;
+  }
+
   global.TamrinEventCalc = {
     payState: payState,
     summary: summary,
     filterParticipants: filterParticipants,
     filterCounts: filterCounts,
     durationText: durationText,
-    pace: pace
+    pace: pace,
+    hasMore: hasMore,
+    mergeById: mergeById
   };
 })(window);

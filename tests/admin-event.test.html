@@ -191,6 +191,42 @@
       eq(C.pace(d, T0 + 2 * H).kind, 'last');
     });
 
+    test('hasMore is true while pages remain', function () {
+      eq(C.hasMore(1, 10, 23), true, 'page 1 of 3');
+      eq(C.hasMore(2, 10, 23), true, 'page 2 of 3');
+    });
+
+    test('hasMore is false on the exact last page', function () {
+      eq(C.hasMore(3, 10, 23), false, 'page 3 of 3');
+      eq(C.hasMore(2, 10, 20), false, 'exact boundary');
+      eq(C.hasMore(1, 10, 10), false, 'single full page');
+    });
+
+    test('hasMore is false for empty or unusable input', function () {
+      eq(C.hasMore(1, 10, 0), false, 'zero total');
+      eq(C.hasMore(0, 10, 5), false, 'page 0');
+      eq(C.hasMore(1, 0, 5), false, 'size 0');
+      eq(C.hasMore(1, 10, 'x'), false, 'non-numeric');
+      eq(C.hasMore(null, 10, 5), false, 'null page');
+    });
+
+    test('mergeById appends in order', function () {
+      eq(C.mergeById([{ id: 'a' }], [{ id: 'b' }, { id: 'c' }]).map(function (r) { return r.id; }),
+         ['a', 'b', 'c']);
+    });
+
+    test('mergeById drops later duplicates and keeps the first', function () {
+      const out = C.mergeById([{ id: 'a', v: 1 }, { id: 'b', v: 1 }], [{ id: 'b', v: 2 }, { id: 'c', v: 2 }]);
+      eq(out.map(function (r) { return r.id + r.v; }), ['a1', 'b1', 'c2']);
+    });
+
+    test('mergeById tolerates empty, null and holes without mutating', function () {
+      const a = [{ id: 'a' }];
+      eq(C.mergeById(null, undefined), [], 'both missing');
+      eq(C.mergeById(a, [null, { id: 'b' }]).map(function (r) { return r.id; }), ['a', 'b'], 'null entry');
+      eq(a.length, 1, 'input untouched');
+    });
+
     window.__results = results;
     document.getElementById('summary').textContent =
       results.failed === 0
