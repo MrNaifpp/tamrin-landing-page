@@ -40,14 +40,24 @@
   to = "/admin.html"
   status = 200
 
-# Event deep links: when opened without the app, show the branded fallback page (HTTP 200).
+# Member web app (app/) — the member side of the iOS app, for Android and any
+# other device without the app. On an iPhone with the app installed, Universal
+# Links (/.well-known/apple-app-site-association) open the app before the
+# browser ever asks for these paths; everywhere else the web app answers them.
+# Netlify only applies a 200 rewrite when no file matches, so the app's own
+# files under /app/ are still served as files.
 [[redirects]]
   from = "/event/*"
-  to = "/404.html"
+  to = "/app/index.html"
   status = 200
 
-# Workspace invite links: same branded fallback.
 [[redirects]]
   from = "/join/*"
-  to = "/404.html"
+  to = "/app/index.html"
+  status = 200
+
+# In-app screens (/app/team/…, /app/settings) are routes, not files.
+[[redirects]]
+  from = "/app/*"
+  to = "/app/index.html"
   status = 200
