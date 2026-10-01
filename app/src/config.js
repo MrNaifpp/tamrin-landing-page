@@ -1,16 +1,18 @@
 // Which Supabase project the web client talks to.
 //
-// Mirrors Sirr/core/supabase/SupabaseEnvironment.swift, which currently pins
-// every build — production included — to the development sandbox while the
-// waitlist migration is still catching up. The web app must sit on the same
-// database as the app it mirrors, so it is pinned here too and moves when the
-// iOS constant moves.
+// Production, the same project the App Store build reaches through
+// Config/Release.xcconfig in the iOS repo. It has to be: the /event/<id> and
+// /join/<code> links that build shares carry production ids, so a web member
+// on any other project would open a friend's link and find nothing. The
+// تمرين STG build (com.businessech.tmrin.staging) stays on the sandbox and
+// has no web counterpart.
 //
-// The anon key is public by design: it ships in the iOS binary already, and
-// RLS plus the SECURITY DEFINER RPCs are what actually protect the data.
-export const SUPABASE_HOST = 'kpcdinxusxycenfnitjc.supabase.co'
+// The anon key is public by design: it ships in the iOS binary and in the
+// admin dashboard already, and RLS plus the SECURITY DEFINER RPCs are what
+// actually protect the data. Never put a service_role key here.
+export const SUPABASE_HOST = 'hzsxwnmbdkrmipjtfzlp.supabase.co'
 export const SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwY2Rpbnh1c3h5Y2VuZm5pdGpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3ODc0MTUsImV4cCI6MjA4NTM2MzQxNX0.yKbHhYVZbvgU8QdCyYNrvG8rC7KtX5cqXPGpedHMJ_g'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh6c3h3bm1iZGtybWlwanRmemxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NTcwOTksImV4cCI6MjEwMTIzMzA5OX0.Opjcn6HMOWdw07RPDEXGaytKziAsnvvJSzpzuw8NiPY'
 
 export const SUPABASE_URL = `https://${SUPABASE_HOST}`
 
