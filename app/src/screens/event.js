@@ -13,6 +13,7 @@ import { CardPaymentSheet, resumeCardPayment, verifyMessage } from './card.js'
 import { LineupSection, resolveLineup } from './lineup.js'
 import { PlayerSheet } from './rating.js'
 import { ConfirmSheet } from './confirm.js'
+import { useBarColor } from '../chrome.js'
 
 /// EventDetailView: artwork at the top, then one panel carrying its own
 /// frost. Everything the member does with an exercise happens here now —
@@ -114,6 +115,11 @@ export function EventScreen({ eventId, entry, session, profile }) {
     return () => { live = false }
   }, [load])
 
+  // Shaded 0.32 at the top and 0.58 at the foot, so the bars take the middle.
+  useBarColor(event && Array.isArray(workspace)
+    ? { art: eventArt(event.id, sportOf(workspace.find((w) => w.id === event.workspace_id) ?? null)), dim: 0.55 }
+    : '.app')
+
   if (error) {
     return html`
       <div class="app"><div class="event"><div class="event-panel" style="padding-top:80px">
@@ -197,11 +203,13 @@ export function EventScreen({ eventId, entry, session, profile }) {
   }
 
   return html`
-    <div class="app">
+    <div class="app is-event">
       <div class="event" style=${`--fade-start:${Math.max(panelTop - 60, 0)}px;--fade-end:${Math.max(panelTop - 60, 0) + 150}px`}>
-        <div class="event-art"><img class="fade-img" ref=${fadeInImage} src=${art} alt="" /></div>
-        <div class="event-art-blur"><img class="fade-img" ref=${fadeInImage} src=${art} alt="" /></div>
-        <div class="event-shade"></div>
+        <div class="event-stage">
+          <div class="event-art"><img class="fade-img" ref=${fadeInImage} src=${art} alt="" /></div>
+          <div class="event-art-blur"><img class="fade-img" ref=${fadeInImage} src=${art} alt="" /></div>
+          <div class="event-shade"></div>
+        </div>
 
         <button class="glass-circle event-back" onClick=${goBack} aria-label="إغلاق">
           <${Icon.close} />

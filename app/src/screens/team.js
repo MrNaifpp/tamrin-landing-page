@@ -2,6 +2,7 @@ import { html, useState, useEffect, useCallback } from '../../vendor/preact.js'
 import { getWorkspace, getWorkspaceEvents, getEventById } from '../api.js'
 import { goBack } from '../router.js'
 import { Spinner, Icon, MemberAvatar, sportOf, usesFootballFeatures } from '../ui.js'
+import { useBarColor } from '../chrome.js'
 import { parseDate, arabicDay, arabicTime, cleanAmount, counted, NOUNS } from '../format.js'
 import { directionsUrl } from './event.js'
 import { PlayerSheet } from './rating.js'
@@ -15,6 +16,7 @@ import { PlayerSheet } from './rating.js'
 /// exercise the page was opened from, exactly as HomeStore.synthesizePlan
 /// does on the phone.
 export function TeamScreen({ workspaceId, eventId, session }) {
+  useBarColor('.team')
   const userId = session.user.id
   const [detail, setDetail] = useState(null)
   const [plan, setPlan] = useState(undefined)

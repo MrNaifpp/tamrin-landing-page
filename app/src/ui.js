@@ -260,27 +260,54 @@ export function useArtTint(src) {
     if (!src) return
     if (tintCache.has(src)) { setTint(tintCache.get(src)); return }
     let live = true
-    const image = new Image()
-    image.decoding = 'async'
-    image.onload = () => {
-      try {
-        const canvas = document.createElement('canvas')
-        canvas.width = canvas.height = 1
-        const context = canvas.getContext('2d', { willReadFrequently: true })
-        context.drawImage(image, 0, 0, 1, 1)
-        let [r, g, b] = context.getImageData(0, 0, 1, 1).data
-        const brightness = Math.max(r, g, b) / 255
-        if (brightness > 0.44) {
-          const scale = 0.44 / brightness
-          r *= scale; g *= scale; b *= scale
-        }
-        const value = `${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}`
-        tintCache.set(src, value)
-        if (live) setTint(value)
-      } catch {}
-    }
-    image.src = src
+    averageArtColor(src).then((rgb) => {
+      let [r, g, b] = rgb
+      const brightness = Math.max(r, g, b) / 255
+      if (brightness > 0.44) {
+        const scale = 0.44 / brightness
+        r *= scale; g *= scale; b *= scale
+      }
+      const value = `${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}`
+      tintCache.set(src, value)
+      if (live) setTint(value)
+    }).catch(() => {})
     return () => { live = false }
   }, [src])
   return tint
+}
+
+/// A picture's mean colour as [r, g, b], read once per picture. Drawing
+/// straight into one pixel only samples a few source pixels near the middle,
+/// so the picture is shrunk to 32×32 and those pixels are averaged.
+const averageCache = new Map()
+export function averageArtColor(src) {
+  if (!averageCache.has(src)) {
+    averageCache.set(src, new Promise((resolve, reject) => {
+      const image = new Image()
+      image.decoding = 'async'
+      image.onload = () => {
+        try {
+          const size = 32
+          const canvas = document.createElement('canvas')
+          canvas.width = canvas.height = size
+          const context = canvas.getContext('2d', { willReadFrequently: true })
+          context.imageSmoothingQuality = 'high'
+          context.drawImage(image, 0, 0, size, size)
+          const { data } = context.getImageData(0, 0, size, size)
+          const sum = [0, 0, 0]
+          for (let i = 0; i < data.length; i += 4) {
+            sum[0] += data[i]
+            sum[1] += data[i + 1]
+            sum[2] += data[i + 2]
+          }
+          resolve(sum.map((channel) => channel / (size * size)))
+        } catch (failure) {
+          reject(failure)
+        }
+      }
+      image.onerror = reject
+      image.src = src
+    }))
+  }
+  return averageCache.get(src)
 }

@@ -2,6 +2,7 @@ import { html, useState } from '../../vendor/preact.js'
 import { saveProfile, signOut } from '../api.js'
 import { goBack, href } from '../router.js'
 import { POSITIONS, MemberAvatar } from '../ui.js'
+import { useBarColor } from '../chrome.js'
 import { APP_STORE_URL } from '../config.js'
 
 /// ProfileSettingsView — the account sheet, deliberately narrow in scope: a
@@ -9,6 +10,7 @@ import { APP_STORE_URL } from '../config.js'
 /// deletion stay in the app; each is an upload, a storage policy or an
 /// irreversible RPC.
 export function SettingsScreen({ session, profile, onProfileChanged }) {
+  useBarColor('.settings-page')
   const userId = session.user.id
   const [name, setName] = useState(profile?.name ?? '')
   const [position, setPosition] = useState(POSITIONS.includes(profile?.postion) ? profile.postion : '')

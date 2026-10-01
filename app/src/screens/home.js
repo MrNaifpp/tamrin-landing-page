@@ -9,6 +9,7 @@ import {
 } from '../format.js'
 import { APP_STORE_URL } from '../config.js'
 import { RatingOnboarding, shouldShowRatingOnboarding } from './rating.js'
+import { useBarColor } from '../chrome.js'
 
 /// DesignerHomeView. One stack of every exercise from every group the person
 /// is in, nearest first — there is no group drawer any more. The group of the
@@ -92,6 +93,8 @@ export function HomeScreen({ session, profile }) {
   const shelf = showsPast ? (past?.events ?? []) : upcoming
   const front = shelf[Math.min(index, Math.max(shelf.length - 1, 0))]
   const art = front ? artOf(front) : null
+  // The backdrop is the picture under a 0.42 black veil, edge to edge.
+  useBarColor(art ? { art, dim: 0.58 } : '.app')
 
   // The backdrop cross-fades over the time the app gives it, so the outgoing
   // picture fades under the incoming one rather than being swapped for it.

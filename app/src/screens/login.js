@@ -2,12 +2,14 @@ import { html, useState, useRef } from '../../vendor/preact.js'
 import { requestOtp, verifyOtp } from '../api.js'
 import { asciiDigits } from '../format.js'
 import { APP_STORE_URL } from '../config.js'
+import { useBarColor } from '../chrome.js'
 
 /// The app's three sign-in screens, in order: LoginOnbord, LoginView, then
 /// LoginOTPView. Apple sign-in is the one control that cannot cross over — it
 /// needs a web Service ID on the Supabase project that the app has never had —
 /// so its place in the layout carries the download link instead.
 export function LoginScreen() {
+  useBarColor('.light-page')
   const [screen, setScreen] = useState('onbord')
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')

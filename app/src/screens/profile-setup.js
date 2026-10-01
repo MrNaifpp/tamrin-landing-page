@@ -1,10 +1,12 @@
 import { html, useState } from '../../vendor/preact.js'
 import { saveProfile } from '../api.js'
 import { POSITIONS } from '../ui.js'
+import { useBarColor } from '../chrome.js'
 
 /// SignupView: a first sign-in has an auth user but no row in public.users,
 /// and every roster reads its name from there.
 export function ProfileSetupScreen({ userId, initialName = '', onSaved }) {
+  useBarColor('.light-page')
   const [name, setName] = useState(initialName)
   const [position, setPosition] = useState('وسط')
   const [busy, setBusy] = useState(false)

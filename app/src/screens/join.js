@@ -2,6 +2,7 @@ import { html, useState, useEffect } from '../../vendor/preact.js'
 import { getInvitePreview, joinWorkspace } from '../api.js'
 import { href, goBack } from '../router.js'
 import { Spinner, Icon } from '../ui.js'
+import { useBarColor } from '../chrome.js'
 import { counted, NOUNS } from '../format.js'
 
 /// JoinWorkspaceView — the other end of a shared invite link. On an iPhone the
@@ -9,6 +10,7 @@ import { counted, NOUNS } from '../format.js'
 const openHome = () => { location.href = href({ name: 'home' }) }
 
 export function JoinScreen({ code }) {
+  useBarColor('.app')
   const [preview, setPreview] = useState(null)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
