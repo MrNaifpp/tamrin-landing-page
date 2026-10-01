@@ -34,12 +34,13 @@ export function EventScreen({ eventId, entry, session, profile }) {
   const [removing, setRemoving] = useState(null)
   const [busy, setBusy] = useState(false)
   const [handledEntry, setHandledEntry] = useState(false)
-  // Where the panel's top edge currently sits, so its frost dissolves in at
-  // the panel's own edge rather than at a fixed point on the screen.
-  const [panelTop, setPanelTop] = useState(300)
+  // Once the picture has scrolled away the top bar takes a background, the
+  // way the team details bar always has one: content fades under it.
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => setPanelTop(Math.max(300 - window.scrollY, 0))
+    const onScroll = () => setScrolled(window.scrollY > 232)
+    onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
@@ -204,23 +205,25 @@ export function EventScreen({ eventId, entry, session, profile }) {
 
   return html`
     <div class="app is-event">
-      <div class="event" style=${`--fade-start:${Math.max(panelTop - 60, 0)}px;--fade-end:${Math.max(panelTop - 60, 0) + 150}px`}>
+      <div class="event">
         <div class="event-stage">
           <div class="event-art"><img class="fade-img" ref=${fadeInImage} src=${art} alt="" /></div>
           <div class="event-art-blur"><img class="fade-img" ref=${fadeInImage} src=${art} alt="" /></div>
           <div class="event-shade"></div>
         </div>
 
-        <button class="glass-circle event-back" onClick=${goBack} aria-label="إغلاق">
-          <${Icon.close} />
-        </button>
-        <button class="glass-circle event-details" disabled=${!event.workspace_id}
-                onClick=${() => navigate({ name: 'team', workspaceId: event.workspace_id, eventId: event.id })}
-                aria-label="تفاصيل التمرين" title="يفتح قالب التمرين وأعضاءه وطرق الدفع">
-          <${Icon.details} />
-        </button>
-
         <div class="event-scroll">
+          <div class=${`event-bar ${scrolled ? 'is-solid' : ''}`}>
+            <button class="glass-circle" onClick=${goBack} aria-label="إغلاق">
+              <${Icon.close} />
+            </button>
+            <h2 class="truncate" aria-hidden=${!scrolled}>${event.name}</h2>
+            <button class="glass-circle" disabled=${!event.workspace_id}
+                    onClick=${() => navigate({ name: 'team', workspaceId: event.workspace_id, eventId: event.id })}
+                    aria-label="تفاصيل التمرين" title="يفتح قالب التمرين وأعضاءه وطرق الدفع">
+              <${Icon.details} />
+            </button>
+          </div>
           <div class="event-window"></div>
           <div class="event-panel">
             <div class="hero enter" style="--i:0">

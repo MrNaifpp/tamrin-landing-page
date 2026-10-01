@@ -34,6 +34,8 @@ export function useBarColor(source) {
 }
 
 function paint(color) {
+  // Also for the page's own chrome that should run on into the browser's.
+  document.documentElement.style.setProperty('--bar', color)
   document.documentElement.style.backgroundColor = color
   document.body.style.backgroundColor = color
   for (const meta of document.querySelectorAll('meta[name="theme-color"]')) meta.setAttribute('content', color)

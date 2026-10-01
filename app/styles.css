@@ -582,43 +582,42 @@ img { display: block; }
   position: relative;
   min-height: 100dvh;
   /* clip, not hidden: hidden would make this a scroll container and stop the
-     sticky stage below from sticking. */
+     sticky top bar from sticking. */
   overflow-x: clip;
   --fade-start: 240px;
   --fade-end: 390px;
 }
 /* hidden would make the column a scroll container, which stops the sticky
-   stage below from sticking; clip crops the same, and flow-root keeps the
-   block formatting context hidden gave. Transparent, because Safari does not
-   paint the sticky stage in the strip under its toolbar after an in-app
-   navigation, and there the page colour (chrome.js) should show, not black. */
+   top bar from sticking; clip crops the same, and flow-root keeps the block
+   formatting context hidden gave. Transparent, so that below the picture the
+   page colour chrome.js picked from it shows, rather than black. */
 .app.is-event { overflow: clip; display: flow-root; background: transparent; }
 
-/* The artwork, its frost and its shade stay put while the page scrolls. They
-   are sticky rather than fixed because Safari takes its bar colour from a
-   fixed layer on the screen's edge, reads it only while the page first loads,
-   and here that layer is a picture: the bars came out black. With nothing
-   fixed on the edge, Safari uses the page colour chrome.js keeps in step
-   with the artwork, and lets the page run under its floating toolbar. */
+/* The artwork, its frost and its shade sit at the top of the page and scroll
+   away with it, as the team details page does. Nothing here is fixed: Safari
+   takes its bar colour from a fixed layer on the screen's edge, reads it only
+   while the page first loads, and here that layer would be a picture — the
+   bars came out black. With nothing fixed on the edge, Safari uses the page
+   colour chrome.js keeps in step with the artwork. */
 .event-stage {
-  position: sticky;
+  position: absolute;
   top: 0;
+  inset-inline: 0;
   height: 100lvh;
-  margin-bottom: -100lvh;
   max-width: var(--shell);
   margin-inline: auto;
   z-index: 0;
   pointer-events: none;
+  /* Its foot dissolves into the page colour below rather than ending in a
+     line; that colour is the same picture's average (chrome.js). */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 240px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 240px), transparent);
 }
 .event-art { view-transition-name: event-art; }
 .event-art, .event-art-blur {
   position: absolute;
   inset: 0;
 }
-/* The page now shows under Safari's toolbar, so the frost and shade run past
-   the foot of the screen: a blur fades out at its own edge, and that edge
-   would otherwise sit right behind the toolbar as a dark band. */
-.event-art-blur { bottom: -160px; }
 .event-art img, .event-art-blur img {
   width: 100%;
   height: 100%;
@@ -633,7 +632,7 @@ img { display: block; }
 }
 .event-shade {
   position: absolute;
-  inset: 0 0 -160px;
+  inset: 0;
   background: linear-gradient(to bottom,
     rgba(0, 0, 0, 0.32) 0%,
     rgba(0, 0, 0, 0.06) 26%,
@@ -651,7 +650,43 @@ img { display: block; }
 @media (max-width: 480px) { .event-back { right: 20px; } }
 
 .event-scroll { position: relative; z-index: 1; }
-.event-window { height: 300px; }
+.event-window { height: calc(300px - 68px); } /* 300 of picture, less the bar */
+
+/* The close and details buttons, and once the picture has gone, the event's
+   name on the team details bar's fading background. Sticky, not fixed, so
+   Safari keeps reading its bar colour from the page (see .event-stage); its
+   gradient starts in that same colour (--bar, from chrome.js), so the bar runs
+   on into Safari's own. */
+.event-bar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 68px;
+  padding: 10px 20px 14px;
+  pointer-events: none;
+}
+.event-bar > * { position: relative; pointer-events: auto; }
+.event-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(var(--bar, var(--page)) 62%, transparent);
+  opacity: 0;
+  transition: opacity 0.25s var(--smooth);
+}
+.event-bar h2 {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 0.25s var(--smooth);
+}
+.event-bar.is-solid::before, .event-bar.is-solid h2 { opacity: 1; }
 .event-panel {
   padding: 26px var(--page-pad) 40px;
   display: flex;
@@ -1659,14 +1694,6 @@ img { display: block; }
 }
 
 /* ── Event page, since the payment and lineup work ───────────────────── */
-
-.event-details {
-  position: fixed;
-  top: 10px;
-  z-index: 6;
-  left: max(20px, calc(50vw - var(--shell) / 2 + 20px));
-}
-@media (max-width: 480px) { .event-details { left: 20px; } }
 
 .panel-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
 .panel-body { font-size: 13px; line-height: 1.6; color: rgba(255, 255, 255, 0.68); }
