@@ -17,6 +17,7 @@
      users({ search, page, pageSize })  -> { rows, total }
      activeEvents()          -> [ event ]
      eventDetails(eventId)   -> { event, participants, waitlist, declined, no_reply, group_size } | null
+     pastEvents({ workspaceId, page, pageSize }) -> { rows, total }
      playerProfile(userId)   -> { user, scale, my_ratings, groups, activity }
      deleteRating({ raterId, rateeId, workspaceId }) -> { deleted }
    ========================================================================= */
@@ -144,6 +145,7 @@
       // أسماء محايدة — المواعيد عشوائية فلا تُقيَّد بيوم أو وقت
       name: ['تمرين الأسبوع', 'مباراة ودية', 'تمرين اللياقة',
              'مباراة الحي', 'بادل', 'تمرين مفتوح'][Math.floor(seeded(i + 5) * 6)],
+      workspace_id: MOCK_WORKSPACES[Math.floor(seeded(i + 11) * WORKSPACES.length)].id,
       workspace_name: WORKSPACES[Math.floor(seeded(i + 11) * WORKSPACES.length)],
       creator_name: `${FIRST[Math.floor(seeded(i + 47) * FIRST.length)]} `
                   + `${LAST[Math.floor(seeded(i + 83) * LAST.length)]}`,
@@ -161,12 +163,52 @@
     };
   }).sort((a, b) => a.start_date.localeCompare(b.start_date));
 
+  /* فعاليات سابقة تجريبية لأول أربع مجموعات؛ الخامسة بلا تاريخ حتى تظهر
+     حالة الفراغ. بعضها ملغى. */
+  const MOCK_PAST_EVENTS = Array.from({ length: 44 }, (_, k) => {
+    const ws = MOCK_WORKSPACES[k % 4];
+    const capacity = [10, 12, 14, 16][Math.floor(seeded(k + 201) * 4)];
+    const cancelled = seeded(k + 203) > 0.86;
+    const joined = cancelled ? Math.floor(seeded(k + 205) * 4) : Math.max(4, Math.floor(seeded(k + 207) * (capacity + 1)));
+    const price = [25, 30, 35, 40][Math.floor(seeded(k + 209) * 4)];
+    const hour = [18, 19, 20, 21][Math.floor(seeded(k + 211) * 4)];
+    const start = dayStart - (1 + Math.floor(k / 4) * 6 + Math.floor(seeded(k + 213) * 5)) * DAY + hour * 3600000;
+    return {
+      id: `p-${String(k + 1).padStart(3, '0')}`,
+      name: ['تمرين الأسبوع', 'مباراة ودية', 'تمرين اللياقة', 'مباراة الحي'][Math.floor(seeded(k + 215) * 4)],
+      workspace_id: ws.id,
+      workspace_name: ws.name,
+      creator_name: `${FIRST[Math.floor(seeded(k + 217) * FIRST.length)]} ${LAST[Math.floor(seeded(k + 219) * LAST.length)]}`,
+      location: LOCATIONS[Math.floor(seeded(k + 221) * LOCATIONS.length)],
+      start_date: new Date(start).toISOString(),
+      end_date: new Date(start + 7200000).toISOString(),
+      price_per_person: price,
+      total_price: price * joined,
+      max_participants: capacity,
+      participant_count: joined,
+      waitlist_count: 0,
+      paid_count: Math.floor(joined * (0.5 + seeded(k + 223) * 0.5)),
+      registration_locked: true,
+      published_at: new Date(start - 3 * DAY).toISOString(),
+      cancelled_at: cancelled ? new Date(start - DAY).toISOString() : null
+    };
+  });
+
+  // بذرة الفعالية: النشطة e-001 → 1، والسابقة p-001 → 501 حتى لا تتكرّر البيانات
+  const mockSeed = (id) => Number(id.slice(2)) + (id[0] === 'p' ? 500 : 0);
+
+  // حالة الدفع للمقعد k — مشتركة بين التفاصيل وصفّ القائمة حتى تتطابق الأعداد
+  function mockPayStatus(ev, k) {
+    if (k < ev.paid_count) return 'confirmed';
+    return seeded(mockSeed(ev.id) * 17 + k) > 0.6 ? 'waived' : 'pending';
+  }
+
   /* تفاصيل فعالية تجريبية. تُبنى من صف القائمة نفسه حتى تتطابق الأرقام:
      عدد المسجّلين = participant_count، والمدفوعون = paid_count. */
   function mockEventDetails(id) {
-    const ev = MOCK_EVENTS.find((e) => e.id === id);
+    const ev = MOCK_EVENTS.concat(MOCK_PAST_EVENTS).find((e) => e.id === id);
     if (!ev) return null;
-    const i = Number(id.slice(2));
+    const i = mockSeed(id);
 
     // ترتيب ثابت للمستخدمين خاص بهذه الفعالية
     const pool = MOCK_USERS
@@ -179,12 +221,13 @@
     const published = Date.parse(ev.published_at);
     // التسجيلات موزّعة بين النشر والآن. الفعالية المنشورة اليوم تُمدّ نافذتها
     // إلى الوراء حتى لا تقع كل التسجيلات في اللحظة نفسها.
-    const span = Math.max(now - published, 6 * 3600000);
+    // نهاية النافذة: الآن للفعالية القادمة، وموعدها للسابقة
+    const until = Math.min(now, Date.parse(ev.start_date));
+    const span = Math.max(until - published, 6 * 3600000);
     const step = span / (ev.participant_count + ev.waitlist_count + 4);
-    const base = now - span;
+    const base = until - span;
     const at = (k) => new Date(base + (k + 1) * step).toISOString();
-    const status = (k) => (k < ev.paid_count ? 'confirmed'
-      : seeded(i * 17 + k) > 0.6 ? 'waived' : 'pending');
+    const status = (k) => mockPayStatus(ev, k);
 
     const participants = [];
     for (let k = 0; k < ev.participant_count; k++) {
@@ -226,12 +269,12 @@
 
     return {
       event: {
-        id: ev.id, name: ev.name, description: '', workspace_id: null,
+        id: ev.id, name: ev.name, description: '', workspace_id: ev.workspace_id,
         workspace_name: ev.workspace_name, creator_name: ev.creator_name,
         location: ev.location, start_date: ev.start_date, end_date: ev.end_date,
         price_per_person: ev.price_per_person, total_price: ev.total_price,
         max_participants: ev.max_participants, registration_locked: ev.registration_locked,
-        published_at: ev.published_at, cancelled_at: null
+        published_at: ev.published_at, cancelled_at: ev.cancelled_at || null
       },
       participants,
       waitlist,
@@ -403,6 +446,30 @@
     return rpc('admin_event_details', { p_event_id: eventId });
   }
 
+  async function pastEvents({ workspaceId, page = 1, pageSize = 10 } = {}) {
+    if (USE_MOCK) {
+      await wait(280);
+      const all = MOCK_PAST_EVENTS
+        .filter((e) => e.workspace_id === workspaceId)
+        .sort((a, b) => b.start_date.localeCompare(a.start_date) || a.id.localeCompare(b.id));
+      const rows = all.slice((page - 1) * pageSize, page * pageSize).map((e) => {
+        let waived = 0;
+        for (let k = 0; k < e.participant_count; k++) if (mockPayStatus(e, k) === 'waived') waived++;
+        return {
+          id: e.id, name: e.name, location: e.location,
+          start_date: e.start_date, end_date: e.end_date,
+          max_participants: e.max_participants, price_per_person: e.price_per_person,
+          cancelled_at: e.cancelled_at,
+          participant_count: e.participant_count, paid_count: e.paid_count, waived_count: waived
+        };
+      });
+      return { rows, total: all.length };
+    }
+    return rpc('admin_list_workspace_past_events', {
+      p_workspace_id: workspaceId, p_page: page, p_page_size: pageSize
+    });
+  }
+
   async function playerProfile(userId) {
     if (USE_MOCK) {
       await wait(260);
@@ -487,7 +554,7 @@
 
   global.TamrinData = {
     signIn, signOut, restoreSession, isMock,
-    overview, users, activeEvents, eventDetails,
+    overview, users, activeEvents, eventDetails, pastEvents,
     playerProfile, deleteRating
   };
 })(window);
