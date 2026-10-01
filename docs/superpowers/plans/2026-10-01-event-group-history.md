@@ -316,7 +316,7 @@ with
 ```js
   /* فعاليات سابقة تجريبية لأول أربع مجموعات؛ الخامسة بلا تاريخ حتى تظهر
      حالة الفراغ. بعضها ملغى. */
-  const MOCK_PAST_EVENTS = Array.from({ length: 34 }, (_, k) => {
+  const MOCK_PAST_EVENTS = Array.from({ length: 44 }, (_, k) => {
     const ws = MOCK_WORKSPACES[k % 4];
     const capacity = [10, 12, 14, 16][Math.floor(seeded(k + 201) * 4)];
     const cancelled = seeded(k + 203) > 0.86;
@@ -423,7 +423,7 @@ mcp__Claude_Browser__navigate       { "url": "http://localhost:4173/admin.html?t
 mcp__Claude_Browser__javascript_tool { "action": "javascript_exec", "text": "await TamrinData.signIn('a@b.c','x'); const out = {}; for (const w of ['w-1','w-2','w-3','w-4','w-5']) { const p1 = await TamrinData.pastEvents({ workspaceId: w, page: 1, pageSize: 10 }); let rows = p1.rows; for (let p = 2; (p - 1) * 10 < p1.total; p++) rows = rows.concat((await TamrinData.pastEvents({ workspaceId: w, page: p, pageSize: 10 })).rows); let bad = 0; for (const r of rows) { const d = await TamrinData.eventDetails(r.id); const st = d.participants.map(x => x.payment_status); if (st.length !== r.participant_count || st.filter(s => s === 'confirmed').length !== r.paid_count || st.filter(s => s === 'waived').length !== r.waived_count || d.event.workspace_id !== w) bad++; } out[w] = { total: p1.total, fetched: rows.length, bad, cancelled: rows.filter(r => r.cancelled_at).length }; } const a = (await TamrinData.activeEvents())[0]; out.activeHasWs = /^w-\\d$/.test((await TamrinData.eventDetails(a.id)).event.workspace_id); out" }
 ```
 
-Expected: `w-1`…`w-4` each `total` 8 or 9, `fetched === total`, `bad: 0`; at least one workspace has `cancelled ≥ 1`; `w-5` is `{ total: 0, fetched: 0, bad: 0, cancelled: 0 }`; `activeHasWs: true`.
+Expected: `w-1`…`w-4` each `total` 11 (so page 2 exists), `fetched === total`, `bad: 0`; at least one workspace has `cancelled ≥ 1`; `w-5` is `{ total: 0, fetched: 0, bad: 0, cancelled: 0 }`; `activeHasWs: true`.
 
 - [ ] **Step 8: Restore `USE_MOCK` and commit**
 
