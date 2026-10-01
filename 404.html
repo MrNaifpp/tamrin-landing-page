@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>تمرين — افتح التمرين في التطبيق</title>
+  <title>تمرين — الصفحة غير موجودة</title>
   <meta name="theme-color" content="#f3f3f3" />
   <link rel="icon" type="image/png" href="/assets/favicon.png" />
 
-  <!-- Open Graph (WhatsApp, Facebook, …) — shown when an /event/{id} link is shared -->
+  <!-- Open Graph (WhatsApp, Facebook, …) -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="تمرين" />
   <meta property="og:locale" content="ar_SA" />
@@ -36,23 +36,9 @@
   <main class="stub">
     <img class="mark" src="/assets/tamrin-icon.png" alt="تمرين" width="76" height="76" />
 
-    <!-- 404 عام (الافتراضي) -->
-    <div id="generic">
+    <div>
       <h1>الصفحة غير موجودة</h1>
       <p>عذرًا، ما قدرنا نلقى الصفحة اللي تدوّر عليها.</p>
-    </div>
-
-    <!-- رابط تمرين: /event/... -->
-    <div id="event" hidden>
-      <h1>افتح هذا التمرين في التطبيق</h1>
-      <p>لعرض تفاصيل التمرين والانضمام إليه، حمّل تطبيق تمرين على جهازك ثم افتح الرابط مرة أخرى.</p>
-      <p id="eventId" class="ref"></p>
-    </div>
-
-    <!-- رابط دعوة مجموعة: /join/... -->
-    <div id="join" hidden>
-      <h1>دُعيت إلى مجموعة في تمرين</h1>
-      <p>حمّل تطبيق تمرين على جهازك ثم افتح الرابط مرة أخرى للانضمام إلى مجموعة أصحابك.</p>
     </div>
 
     <div class="acts">
@@ -67,26 +53,5 @@
     </div>
   </main>
 
-  <script>
-    (function () {
-      function show(id, title) {
-        document.getElementById('generic').hidden = true;
-        document.getElementById(id).hidden = false;
-        document.title = title;
-      }
-
-      var e = location.pathname.match(/^\/event\/([^\/?#]+)/);
-      if (e) {
-        show('event', 'تمرين — تفاصيل التمرين');
-        var id = decodeURIComponent(e[1]);
-        if (id) document.getElementById('eventId').textContent = 'رقم التمرين: ' + id;
-        return;
-      }
-
-      if (/^\/join\/[^\/?#]+/.test(location.pathname)) {
-        show('join', 'تمرين — دعوة إلى مجموعة');
-      }
-    })();
-  </script>
 </body>
 </html>
