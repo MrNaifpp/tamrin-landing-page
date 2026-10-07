@@ -13,6 +13,8 @@ import { CardPaymentSheet, resumeCardPayment, verifyMessage } from './card.js'
 import { LineupSection, resolveLineup } from './lineup.js'
 import { PlayerSheet } from './rating.js'
 import { ConfirmSheet } from './confirm.js'
+import { NotifySheet } from './notify.js'
+import { shouldOfferNow } from '../push.js'
 import { useBarColor } from '../chrome.js'
 
 /// EventDetailView: artwork at the top, then one panel carrying its own
@@ -365,7 +367,10 @@ export function EventScreen({ eventId, entry, session, profile }) {
         mode=${sheet}
         onClose=${() => setSheet(null)}
         onDone=${async (message) => {
-          setSheet(null)
+          // A fresh registration is when notifications earn their ask; adding
+          // guests or paying is not.
+          const offer = sheet === 'register' && shouldOfferNow()
+          setSheet(offer ? 'notify' : null)
           if (message) flash(message)
           await refresh()
         }}
@@ -382,6 +387,13 @@ export function EventScreen({ eventId, entry, session, profile }) {
           flash('دُفعت القطة وتأكد مقعدك')
           await refresh()
         }}
+      />`}
+
+      ${sheet === 'notify' &&
+      html`<${NotifySheet}
+        onClose=${() => setSheet(null)}
+        onEnabled=${() => flash('فعّلنا التنبيهات')}
+        onFailed=${flash}
       />`}
 
       ${sheet === 'decline' &&

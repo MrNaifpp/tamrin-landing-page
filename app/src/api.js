@@ -1,5 +1,6 @@
 import { supabase } from './supabase.js'
 import { DEMO, demoRpc, demoAuth } from './fixture.js'
+import { disable as disablePush } from './push.js'
 
 /// Every call below goes through a SECURITY DEFINER RPC that identifies the
 /// caller with auth.uid(), exactly as the iOS services do — the web client
@@ -139,6 +140,9 @@ export async function verifyOtp(email, token) {
 
 export async function signOut() {
   if (DEMO) return
+  // While the session still exists, so the delete RPC knows who is asking.
+  // Not remembered as «off»: the next account on this browser gets repaired.
+  await disablePush({ rememberOff: false }).catch(() => {})
   await supabase.auth.signOut()
 }
 
