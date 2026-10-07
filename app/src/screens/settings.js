@@ -1,5 +1,6 @@
-import { html, useState } from '../../vendor/preact.js'
+import { html, useState, useEffect } from '../../vendor/preact.js'
 import { saveProfile, signOut } from '../api.js'
+import { pushState, enable, disable } from '../push.js'
 import { goBack, href } from '../router.js'
 import { POSITIONS, MemberAvatar } from '../ui.js'
 import { useBarColor } from '../chrome.js'
@@ -16,6 +17,23 @@ export function SettingsScreen({ session, profile, onProfileChanged }) {
   const [position, setPosition] = useState(POSITIONS.includes(profile?.postion) ? profile.postion : '')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState(null)
+  // null while the browser is being asked; 'unsupported' hides the row.
+  const [push, setPush] = useState(null)
+  const [pushBusy, setPushBusy] = useState(false)
+  useEffect(() => { pushState().then(setPush).catch(() => setPush('unsupported')) }, [])
+
+  async function togglePush() {
+    setPushBusy(true)
+    try {
+      if (push === 'on') await disable()
+      else await enable()
+      setPush(await pushState())
+    } catch {
+      setMessage('تعذر تغيير التنبيهات. حاول مرة أخرى.')
+    } finally {
+      setPushBusy(false)
+    }
+  }
 
   const trimmed = name.trim()
 
@@ -69,6 +87,24 @@ export function SettingsScreen({ session, profile, onProfileChanged }) {
               )}
             </div>
           </div>
+
+          ${push && push !== 'unsupported' && html`
+            <div>
+              <span class="field-label">التنبيهات</span>
+              <div class="chips">
+                <button class="chip" aria-pressed=${push === 'on'}
+                        disabled=${push === 'blocked' || pushBusy}
+                        onClick=${togglePush}>
+                  ${push === 'on' ? 'مفعّلة' : 'متوقفة'}
+                </button>
+              </div>
+              ${push === 'blocked' && html`
+                <div class="notice notice-info" style="margin-top:10px">
+                  التنبيهات محظورة لهذا الموقع. اضغط رمز القفل بجانب العنوان في المتصفح، واسمح بالإشعارات.
+                </div>
+              `}
+            </div>
+          `}
 
           ${message && html`<div class="notice notice-error">${message}</div>`}
 

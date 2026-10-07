@@ -1,5 +1,6 @@
 import { html, render, useState, useEffect, useCallback } from '../vendor/preact.js'
 import { getSession, onAuthChange, getProfile } from './api.js'
+import { repair as repairPush } from './push.js'
 import { useRoute } from './router.js'
 import { Spinner } from './ui.js'
 import { LoginScreen } from './screens/login.js'
@@ -37,6 +38,10 @@ function App() {
   }, [session])
 
   useEffect(() => { loadProfile() }, [loadProfile])
+
+  // Notifications allowed but the subscription lost, or a new account on this
+  // browser: re-save quietly. Never prompts.
+  useEffect(() => { if (session) repairPush().catch(() => {}) }, [session])
 
   if (session === undefined) return html`<div class="app"><${Spinner} /></div>`
 
