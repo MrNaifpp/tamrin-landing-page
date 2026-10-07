@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>اختبارات التنبيهات</title>
+  <style>
+    body { font: 15px/1.6 system-ui, sans-serif; padding: 24px; background: #f3f3f3; }
+    h1 { font-size: 19px; margin-block-end: 16px; }
+    .pass { color: #2f7a48; }
+    .fail { color: #b3261e; font-weight: 700; }
+    ol { padding-inline-start: 22px; }
+    #summary { margin-block-end: 14px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>اختبارات التنبيهات — push-offer.js</h1>
+  <div id="summary">جارٍ التنفيذ…</div>
+  <ol id="out"></ol>
+
+  <script type="module">
+    const results = { passed: 0, failed: 0, failures: [] };
+    const out = document.getElementById('out');
+    const summary = document.getElementById('summary');
+
+    function test(name, fn) {
+      let error = null;
+      try { fn(); } catch (e) { error = e && e.message ? e.message : String(e); }
+      const li = document.createElement('li');
+      if (error) {
+        results.failed++;
+        results.failures.push(name + ': ' + error);
+        li.className = 'fail';
+        li.textContent = 'FAIL — ' + name + ' — ' + error;
+      } else {
+        results.passed++;
+        li.className = 'pass';
+        li.textContent = 'PASS — ' + name;
+      }
+      out.appendChild(li);
+    }
+
+    function eq(actual, expected, what) {
+      const a = JSON.stringify(actual), b = JSON.stringify(expected);
+      if (a !== b) throw new Error((what || 'value') + ' expected ' + b + ' got ' + a);
+    }
+
+    let P;
+    try {
+      P = await import('../app/src/push-offer.js');
+    } catch (e) {
+      summary.textContent = 'FAIL — could not load push-offer.js: ' + e.message;
+      summary.className = 'fail';
+      window.__results = { passed: 0, failed: 1, failures: ['load: ' + e.message] };
+      throw e;
+    }
+
+    const DAY = 86400000;
+    const NOW = 1_800_000_000_000;
+
+    test('offers when supported, undecided, and never postponed', () => {
+      eq(P.shouldOffer({ supported: true, permission: 'default', laterAt: null, now: NOW }), true);
+    });
+
+    test('never offers where push is unsupported', () => {
+      eq(P.shouldOffer({ supported: false, permission: 'default', laterAt: null, now: NOW }), false);
+    });
+
+    test('never offers once allowed or blocked', () => {
+      eq(P.shouldOffer({ supported: true, permission: 'granted', laterAt: null, now: NOW }), false, 'granted');
+      eq(P.shouldOffer({ supported: true, permission: 'denied', laterAt: null, now: NOW }), false, 'denied');
+    });
+
+    test('«لاحقاً» holds the offer back for 14 days', () => {
+      eq(P.LATER_DAYS, 14, 'LATER_DAYS');
+      eq(P.shouldOffer({ supported: true, permission: 'default', laterAt: NOW - 13 * DAY, now: NOW }), false, '13 days');
+      eq(P.shouldOffer({ supported: true, permission: 'default', laterAt: NOW - 14 * DAY, now: NOW }), true, '14 days');
+    });
+
+    test('switchState covers every case', () => {
+      eq(P.switchState({ supported: false, permission: 'default', subscribed: false }), 'unsupported');
+      eq(P.switchState({ supported: true, permission: 'denied', subscribed: false }), 'blocked');
+      eq(P.switchState({ supported: true, permission: 'granted', subscribed: true }), 'on');
+      eq(P.switchState({ supported: true, permission: 'granted', subscribed: false }), 'off');
+      eq(P.switchState({ supported: true, permission: 'default', subscribed: false }), 'off');
+    });
+
+    test('base64UrlToBytes decodes unpadded base64url', () => {
+      eq(Array.from(P.base64UrlToBytes('AQID')), [1, 2, 3], 'no padding needed');
+      eq(Array.from(P.base64UrlToBytes('-_8')), [251, 255], 'url alphabet, padding restored');
+    });
+
+    summary.textContent = results.failed
+      ? `FAIL — ${results.failed} failed, ${results.passed} passed`
+      : `PASS — ${results.passed} passed`;
+    summary.className = results.failed ? 'fail' : 'pass';
+    window.__results = results;
+  </script>
+</body>
+</html>
