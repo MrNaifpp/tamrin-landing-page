@@ -19,3 +19,8 @@ export const SUPABASE_URL = `https://${SUPABASE_HOST}`
 /// Where the iOS build lives, for the «حمّل التطبيق» affordances that stand in
 /// for the organizer tools the web version deliberately does not carry.
 export const APP_STORE_URL = 'https://apps.apple.com/sa/app/id6757168784'
+
+/// Web Push: the public half of the VAPID key pair whose private half is the
+/// VAPID_KEYS secret on both Supabase projects. Public by design — every
+/// browser that subscribes receives it.
+export const VAPID_PUBLIC_KEY = 'BNbzpqdHDBDGhqaScb_Mb67xWFdl2iH7IpQLez9ajIezwrBAicuQGgItNfcr8EF9ZUXif1cXtdUbDtFFYM1gFqQ'
