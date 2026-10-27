@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>اختبارات إعدادات التسجيل</title>
+  <style>
+    body { font: 15px/1.6 system-ui, sans-serif; padding: 24px; background: #f3f3f3; }
+    h1 { font-size: 19px; margin-block-end: 16px; }
+    .pass { color: #2f7a48; }
+    .fail { color: #b3261e; font-weight: 700; }
+    ol { padding-inline-start: 22px; }
+    #summary { margin-block-end: 14px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>اختبارات إعدادات التسجيل — registration-rules.js</h1>
+  <div id="summary">جارٍ التنفيذ…</div>
+  <ol id="out"></ol>
+
+  <script type="module">
+    const results = { passed: 0, failed: 0, failures: [] };
+    const out = document.getElementById('out');
+    const summary = document.getElementById('summary');
+
+    function test(name, fn) {
+      let error = null;
+      try { fn(); } catch (e) { error = e && e.message ? e.message : String(e); }
+      const li = document.createElement('li');
+      if (error) {
+        results.failed++;
+        results.failures.push(name + ': ' + error);
+        li.className = 'fail';
+        li.textContent = 'FAIL — ' + name + ' — ' + error;
+      } else {
+        results.passed++;
+        li.className = 'pass';
+        li.textContent = 'PASS — ' + name;
+      }
+      out.appendChild(li);
+    }
+
+    function eq(actual, expected, what) {
+      const a = JSON.stringify(actual), b = JSON.stringify(expected);
+      if (a !== b) throw new Error((what || 'value') + ' expected ' + b + ' got ' + a);
+    }
+
+    let R;
+    try {
+      R = await import('../app/src/registration-rules.js');
+    } catch (e) {
+      summary.textContent = 'FAIL — could not load registration-rules.js: ' + e.message;
+      summary.className = 'fail';
+      window.__results = { passed: 0, failed: 1, failures: ['load: ' + e.message] };
+      throw e;
+    }
+
+    const MIN = 60000;
+    const HOUR = 60 * MIN;
+    const DAY = 24 * HOUR;
+    const NOW = 1_800_000_000_000;
+    const at = (ms) => new Date(NOW + ms).toISOString();
+    const upcoming = (fields = {}) => ({
+      start_date: at(2 * DAY), end_date: at(2 * DAY + 90 * MIN), cancelled_at: null, ...fields
+    });
+
+    test('pendingOpening is the opening while it is still ahead', () => {
+      const event = upcoming({ registration_opens_at: at(5 * HOUR) });
+      eq(R.pendingOpening(event, NOW)?.getTime(), NOW + 5 * HOUR, 'ahead');
+    });
+
+    test('pendingOpening is null once open, with no rule, skipped, or finished', () => {
+      eq(R.pendingOpening(upcoming({ registration_opens_at: at(-MIN) }), NOW), null, 'already open');
+      eq(R.pendingOpening(upcoming({ registration_opens_at: at(0) }), NOW), null, 'opens this instant');
+      eq(R.pendingOpening(upcoming({ registration_opens_at: null }), NOW), null, 'no rule');
+      eq(R.pendingOpening(upcoming(), NOW), null, 'column missing');
+      eq(R.pendingOpening(upcoming({ registration_opens_at: at(HOUR), cancelled_at: at(-HOUR) }), NOW), null, 'skipped');
+      eq(R.pendingOpening({ start_date: at(-3 * HOUR), end_date: at(-HOUR), registration_opens_at: at(HOUR) }, NOW), null, 'finished');
+    });
+
+    test('needsApproval only for manual', () => {
+      eq(R.needsApproval({ approval_mode: 'manual' }), true, 'manual');
+      eq(R.needsApproval({ approval_mode: 'auto' }), false, 'auto');
+      eq(R.needsApproval({}), false, 'column missing');
+    });
+
+    test('guests are allowed unless switched off', () => {
+      eq(R.guestsAllowed({ guests_allowed: false }), false, 'off');
+      eq(R.guestsAllowed({ guests_allowed: true }), true, 'on');
+      eq(R.guestsAllowed({}), true, 'column missing');
+    });
+
+    test('the sheet offers guests: off never, approval only beside yourself', () => {
+      eq(R.offersGuests({ approval_mode: 'auto', guests_allowed: true }, true), true, 'auto, with self');
+      eq(R.offersGuests({ approval_mode: 'auto', guests_allowed: true }, false), true, 'auto, guests only');
+      eq(R.offersGuests({ approval_mode: 'manual', guests_allowed: true }, true), true, 'manual, with self');
+      eq(R.offersGuests({ approval_mode: 'manual', guests_allowed: true }, false), false, 'manual, guests only');
+      eq(R.offersGuests({ approval_mode: 'auto', guests_allowed: false }, true), false, 'off');
+    });
+
+    test('«سجّل معك أحد» needs guests on and seats granted on sight', () => {
+      eq(R.addsGuestsLater({ approval_mode: 'auto', guests_allowed: true }), true, 'auto');
+      eq(R.addsGuestsLater({ approval_mode: 'manual', guests_allowed: true }), false, 'manual');
+      eq(R.addsGuestsLater({ approval_mode: 'auto', guests_allowed: false }), false, 'off');
+    });
+
+    test('countdownParts rounds up to the minute', () => {
+      eq(R.countdownParts(NOW + 2 * DAY + 3 * HOUR + 4 * MIN, NOW), { days: 2, hours: 3, minutes: 4 }, 'exact');
+      eq(R.countdownParts(NOW + 1000, NOW), { days: 0, hours: 0, minutes: 1 }, 'last seconds read one minute');
+      eq(R.countdownParts(NOW + 59 * MIN + 1000, NOW), { days: 0, hours: 1, minutes: 0 }, 'rounds into the hour');
+      eq(R.countdownParts(NOW - MIN, NOW), { days: 0, hours: 0, minutes: 0 }, 'past is zero');
+    });
+
+    test('requestStatus reads get_my_registration_request', () => {
+      eq(R.requestStatus({ status: 'pending' }), 'pending', 'pending');
+      eq(R.requestStatus({ status: 'declined' }), 'declined', 'declined');
+      eq(R.requestStatus({ status: 'accepted' }), null, 'accepted is a seat, not a request');
+      eq(R.requestStatus(null), null, 'none');
+    });
+
+    summary.textContent = results.failed
+      ? `FAIL — ${results.failed} failed, ${results.passed} passed`
+      : `PASS — ${results.passed} passed`;
+    summary.className = results.failed ? 'fail' : 'pass';
+    window.__results = results;
+  </script>
+</body>
+</html>
