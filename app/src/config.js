@@ -16,6 +16,14 @@ export const SUPABASE_ANON_KEY =
 
 export const SUPABASE_URL = `https://${SUPABASE_HOST}`
 
+/// Whether «دفع القطة» offers cards at all — CardPayments.isEnabled, keyed to
+/// the project the same way. Only the sandbox has create-payment,
+/// verify-payment and the webhook; production has none of them yet, so a pay
+/// button that reached for them there would fail for every member who owes.
+/// Off, pay opens the manual transfer. Add production here once its
+/// functions, secrets and webhook are live.
+export const CARD_PAYMENTS = SUPABASE_HOST.startsWith('kpcdinxusxycenfnitjc.')
+
 /// Where the iOS build lives, for the «حمّل التطبيق» affordances that stand in
 /// for the organizer tools the web version deliberately does not carry.
 export const APP_STORE_URL = 'https://apps.apple.com/sa/app/id6757168784'

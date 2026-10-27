@@ -1,7 +1,7 @@
 import { html, useState, useEffect, useCallback } from '../../vendor/preact.js'
 import {
   getEventById, getEventParticipants, getEventPaymentDestination, getMyWorkspaces,
-  getEventLineup, createCardPayment, removeMyGuest
+  getEventLineup, createCardPayment, cardPaymentsEnabled, removeMyGuest
 } from '../api.js'
 import { goBack, navigate } from '../router.js'
 import { Spinner, Icon, Toast, RowCard, eventArt, sportOf, usesFootballFeatures, fadeInImage } from '../ui.js'
@@ -70,8 +70,10 @@ export function EventScreen({ eventId, entry, session, profile }) {
 
   /// «دفع القطة»: the payment is created on the tap, not when the page opens.
   /// A group with a verified recipient pays by card; one that takes transfers
-  /// by hand gets the transfer sheet.
+  /// by hand gets the transfer sheet, and so does every group while this
+  /// project takes no cards.
   const beginPayment = useCallback(async (current) => {
+    if (!cardPaymentsEnabled) { setSheet('pay'); return }
     setPaying(true)
     try {
       const answer = await createCardPayment(current.id)

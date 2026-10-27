@@ -1,5 +1,6 @@
 import { supabase } from './supabase.js'
 import { DEMO, demoRpc, demoAuth } from './fixture.js'
+import { CARD_PAYMENTS } from './config.js'
 import { disable as disablePush } from './push.js'
 
 /// Every call below goes through a SECURITY DEFINER RPC that identifies the
@@ -272,6 +273,10 @@ async function invoke(name, body) {
   }
   return data
 }
+
+/// The demo answers create-payment itself, so it keeps the card walk on a
+/// production config.
+export const cardPaymentsEnabled = DEMO || CARD_PAYMENTS
 
 /// Prices every unpaid seat the member is responsible for, on the server.
 /// `ready` carries what the Moyasar form needs; `recipient_not_onboarded`
