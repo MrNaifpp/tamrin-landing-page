@@ -1,8 +1,11 @@
 import { html, useState, useEffect, useCallback } from '../../vendor/preact.js'
 import {
   getEventById, getEventParticipants, getEventPaymentDestination, getMyWorkspaces,
-  getEventLineup, createCardPayment, cardPaymentsEnabled, removeMyGuest
+  getEventLineup, createCardPayment, cardPaymentsEnabled, removeMyGuest,
+  getMyRegistrationRequest, withdrawRegistrationRequest
 } from '../api.js'
+import { pendingOpening, needsApproval, addsGuestsLater, requestStatus } from '../registration-rules.js'
+import { RegistrationCountdownPanel } from './countdown.js'
 import { goBack, navigate } from '../router.js'
 import { Spinner, Icon, Toast, RowCard, eventArt, sportOf, usesFootballFeatures, fadeInImage } from '../ui.js'
 import { parseDate, arabicDay, arabicTime, counted, NOUNS, isPast } from '../format.js'
@@ -35,6 +38,10 @@ export function EventScreen({ eventId, entry, session, profile }) {
   const [player, setPlayer] = useState(null)
   const [removing, setRemoving] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [myRequest, setMyRequest] = useState(null) // pending | declined, on an approved exercise
+  const [withdrawing, setWithdrawing] = useState(false)
+  // Moves when the countdown runs out, so the page redraws as registration opens.
+  const [, setOpenedAt] = useState(0)
   const [handledEntry, setHandledEntry] = useState(false)
   // Once the picture has scrolled away the top bar takes a background, the
   // way the team details bar always has one: content fades under it.
@@ -51,15 +58,21 @@ export function EventScreen({ eventId, entry, session, profile }) {
     const record = await getEventById(eventId)
     setEvent(record)
     const paid = Number(record.total_price ?? 0) > 0 || Number(record.price_per_person ?? 0) > 0
-    const [rows, payment, lineup] = await Promise.all([
+    // Only an exercise the organizer approves by hand has requests to read. A
+    // failed read keeps the last known answer; the roster still loads.
+    const [rows, payment, lineup, request] = await Promise.all([
       getEventParticipants(eventId).catch(() => null),
       paid ? getEventPaymentDestination(eventId).catch(() => null) : Promise.resolve(null),
-      getEventLineup(eventId).catch(() => null)
+      getEventLineup(eventId).catch(() => null),
+      needsApproval(record)
+        ? getMyRegistrationRequest(eventId).then(requestStatus).catch(() => undefined)
+        : Promise.resolve(null)
     ])
     setRoster(rows)
     setDestination(payment)
     setLineupRecord(lineup)
-    return { record, rows }
+    if (request !== undefined) setMyRequest(request)
+    return { record, rows, request }
   }, [eventId])
 
   const refresh = useCallback(async () => {
@@ -93,7 +106,7 @@ export function EventScreen({ eventId, entry, session, profile }) {
   useEffect(() => {
     let live = true
     load()
-      .then(async ({ record, rows }) => {
+      .then(async ({ record, rows, request }) => {
         if (!live) return
         // Back from the bank's 3-D Secure page: settle before anything else.
         const returned = await resumeCardPayment(record.id).catch(() => null)
@@ -107,8 +120,11 @@ export function EventScreen({ eventId, entry, session, profile }) {
         setHandledEntry(true)
         const mine = rows?.find((row) => row.user_id === userId && !row.guest_name && !row.is_waitlisted)
         // The entry segment opens the step it names: registration for
-        // «سجّل», and the payment for an exercise still owed.
-        if (entry === 'register' && !mine && !isPast(record)) setSheet('register')
+        // «سجّل», and the payment for an exercise still owed. Nothing opens
+        // before registration does, or over a request already made.
+        if (entry === 'register' && !mine && !isPast(record) && !pendingOpening(record) && !request) {
+          setSheet('register')
+        }
         if (entry === 'pay') beginPayment(record)
       })
       .catch((failure) => live && setError(failure.message))
@@ -154,6 +170,11 @@ export function EventScreen({ eventId, entry, session, profile }) {
   const capacity = event.max_participants ?? 0
   const full = capacity > 0 && seats.length >= capacity
   const closedAtCapacity = full && event.capacity_policy === 'closed'
+  const opening = pendingOpening(event)
+  const approval = needsApproval(event)
+  // Nobody can register yet, so a member has no count or list to read; the
+  // time left stands where the list will be.
+  const listHidden = Boolean(opening) && !isOwner
 
   // Owed covers the member's own seat and any guest they added: a guest added
   // after paying brings the pay button back.
@@ -170,7 +191,8 @@ export function EventScreen({ eventId, entry, session, profile }) {
     : null
 
   const ctaKey = [
-    cancelled ? 'cancelled' : overdue ? 'overdue' : past ? 'past' : myWait ? 'queue' : mine ? 'seat' : full ? 'full' : 'open',
+    cancelled ? 'cancelled' : overdue ? 'overdue' : past ? 'past' : myWait ? 'queue' : mine ? 'seat'
+      : opening ? 'opening' : myRequest ? `request-${myRequest}` : full ? 'full' : 'open',
     owes ? 'owes' : declared ? 'declared' : settled ? 'settled' : '',
     myGuests.length,
     paying ? 'paying' : ''
@@ -192,6 +214,21 @@ export function EventScreen({ eventId, entry, session, profile }) {
       joinedAt: row.joined_at,
       removable: mayRemove
     })
+  }
+
+  async function withdrawRequest() {
+    if (withdrawing) return
+    const previous = myRequest
+    setWithdrawing(true)
+    try {
+      await withdrawRegistrationRequest(event.id)
+      setMyRequest(null)
+    } catch (failure) {
+      setMyRequest(previous)
+      flash(failure.message)
+    } finally {
+      setWithdrawing(false)
+    }
   }
 
   async function removeGuest(row) {
@@ -269,10 +306,16 @@ export function EventScreen({ eventId, entry, session, profile }) {
                           settled=${settled}
                           full=${full}
                           closedAtCapacity=${closedAtCapacity}
+                          opening=${opening}
+                          approval=${approval}
+                          addsGuests=${addsGuestsLater(event)}
+                          request=${myRequest}
+                          withdrawing=${withdrawing}
                           rosterFailed=${roster === null}
                           busy=${busy}
                           paying=${paying}
                           onRetry=${refresh}
+                          onWithdraw=${withdrawRequest}
                           onRegister=${() => setSheet('register')}
                           onPay=${() => beginPayment(event)}
                           onReview=${() => setSheet('pay')}
@@ -293,6 +336,7 @@ export function EventScreen({ eventId, entry, session, profile }) {
               </a>
             `}
 
+            ${!listHidden && html`
             <div class="card enter" style="--i:3">
               <div class="progress-head">
                 <span class="label">المسجلون في الموعد</span>
@@ -308,9 +352,19 @@ export function EventScreen({ eventId, entry, session, profile }) {
                   ? html`<div class="progress-note closed">يقفل التسجيل عند اكتمال العدد</div>`
                   : null}
             </div>
+            `}
 
             ${lineup && html`<${LineupSection} lineup=${lineup} sport=${sport} meId=${userId} art=${art} />`}
 
+            ${opening && html`
+              <${RegistrationCountdownPanel}
+                key=${opening.getTime()}
+                opensAt=${opening}
+                onOpened=${() => { setOpenedAt(Date.now()); refresh() }}
+              />
+            `}
+
+            ${!listHidden && html`
             <div class="section-label enter" style="--i:4">القائمة</div>
             ${roster === null
               ? html`<${Spinner} />`
@@ -353,6 +407,7 @@ export function EventScreen({ eventId, entry, session, profile }) {
                 )}
               </div>
             `}
+            `}
           </div>
         </div>
       </div>
@@ -367,6 +422,7 @@ export function EventScreen({ eventId, entry, session, profile }) {
         mine=${mine}
         myGuests=${myGuests}
         mode=${sheet}
+        onStale=${refresh}
         onClose=${() => setSheet(null)}
         onDone=${async (message) => {
           // A fresh registration is when notifications earn their ask; adding
@@ -438,8 +494,9 @@ export function EventScreen({ eventId, entry, session, profile }) {
 /// participationCTA — what the member can do, in the app's order: the seat,
 /// then the money, then their guests, then the way out.
 function MemberCTA({
-  mine, myWait, myGuests, isPaid, owes, declared, settled, full, closedAtCapacity, rosterFailed,
-  busy, paying, onRetry, onRegister, onPay, onReview, onGuests, onDecline, onRemoveGuest
+  mine, myWait, myGuests, isPaid, owes, declared, settled, full, closedAtCapacity,
+  opening, approval, addsGuests, request, withdrawing, rosterFailed,
+  busy, paying, onRetry, onRegister, onPay, onReview, onGuests, onDecline, onRemoveGuest, onWithdraw
 }) {
   if (rosterFailed) {
     return html`<button class="action action-glass" onClick=${onRetry}>تعذر التحقق من تسجيلك. حاول مجددًا</button>`
@@ -484,9 +541,10 @@ function MemberCTA({
               </div>
             `)}
           </div>`}
-        <button class="action action-glass" onClick=${onGuests} title="يفتح تسجيل ضيوف جدد دون تغيير تسجيلك">
-          <${Icon.personPlus} /> سجّل معك أحد
-        </button>
+        ${addsGuests && html`
+          <button class="action action-glass" onClick=${onGuests} title="يفتح تسجيل ضيوف جدد دون تغيير تسجيلك">
+            <${Icon.personPlus} /> سجّل معك أحد
+          </button>`}
         <button class="status-row" onClick=${onDecline} title="يفتح تأكيد الاعتذار عن الموعد">
           <span class="dot-check dot-lime"><${Icon.seal} /></span>
           مكانك محفوظ
@@ -496,13 +554,38 @@ function MemberCTA({
     `
   }
 
+  // closedRegistrationLabel: nothing to press until registration opens.
+  if (opening) {
+    return html`<div class="action action-prominent action-inert" role="text"><${Icon.lock} /> التسجيل مغلق</div>`
+  }
+
+  // requestPendingRow: asked, not seated. Nothing here hints at how the
+  // request stands against anyone else's.
+  if (request === 'pending') {
+    return html`
+      <div class="state-row request-row">
+        <span class="request-icon"><${Icon.hourglass} /></span>
+        طلبك عند المشرف
+        ${withdrawing
+          ? html`<span class="spinner spinner-small" aria-label="جارٍ سحب الطلب"></span>`
+          : html`<button class="leave" onClick=${onWithdraw}>اسحب الطلب</button>`}
+      </div>
+    `
+  }
+
+  if (request === 'declined') {
+    return html`<div class="action action-quiet"><${Icon.xmarkCircle} /> لم يُقبل طلبك</div>`
+  }
+
   if (closedAtCapacity) {
     return html`<div class="action action-quiet" aria-label="التسجيل مغلق، اكتمل العدد"><${Icon.lock} /> التسجيل مغلق</div>`
   }
 
+  // A request says nothing about how full the list is.
+  const reserve = full && !approval
   return html`
     <button class="action action-prominent" disabled=${busy} onClick=${onRegister}>
-      ${full ? html`<${Icon.clock} /> سجل كاحتياط` : html`<${Icon.plus} /> سجل في التمرين`}
+      ${reserve ? html`<${Icon.clock} /> سجل كاحتياط` : html`<${Icon.plus} /> سجل في التمرين`}
     </button>
   `
 }

@@ -7,6 +7,7 @@ import { navigate } from '../router.js'
 import { Sheet, Icon, MemberAvatar, providerOf } from '../ui.js'
 import { cleanAmount, counted, NOUNS, isPast } from '../format.js'
 import { useDismissible } from '../motion.js'
+import { offersGuests } from '../registration-rules.js'
 
 /// RegistrationFlowSheet. Taking a seat no longer involves money: the seat is
 /// taken unpaid and settled afterwards from «دفع القطة». The payment step here
@@ -18,6 +19,9 @@ import { useDismissible } from '../motion.js'
 
 /// register_event_seat's statuses, worded as MockHomeFeed words them.
 const SEAT_MESSAGES = {
+  request_declined: 'لم يُقبل طلبك لهذا الموعد.',
+  registration_not_open: 'التسجيل في هذا الموعد لم يفتح بعد.',
+  guests_not_allowed: 'تسجيل الضيوف موقف في هذا التمرين.',
   registration_closed: 'التسجيل مقفل لهذا الموعد.',
   not_published: 'لم يُنشر هذا الموعد بعد.',
   cancelled: 'هذا الموعد متخطى.',
@@ -40,7 +44,12 @@ const GUEST_MESSAGES = {
   cancelled: 'هذا الموعد متخطى.'
 }
 
-export function RegistrationSheet({ event, profile, destination, mine, myGuests, mode, onClose, onDone }) {
+/// Statuses that mean the page behind is out of date: the organizer changed
+/// the settings, or answered the request, since it loaded.
+const STALE_STATUSES = new Set(['request_declined', 'registration_not_open', 'guests_not_allowed'])
+const GUARD_REFUSALS = new Set(['registration_not_open', 'guests_not_allowed', 'approval_required'])
+
+export function RegistrationSheet({ event, profile, destination, mine, myGuests, mode, onStale, onClose, onDone }) {
   const isGuestRequest = mode === 'guests'
   const [step, setStep] = useState(mode === 'pay' ? 'payment' : 'seat')
   const [includesSelf, setIncludesSelf] = useState(!isGuestRequest)
@@ -59,7 +68,8 @@ export function RegistrationSheet({ event, profile, destination, mine, myGuests,
 
   const price = Number(event.price_per_person ?? 0)
   const isPaid = Number(event.total_price ?? 0) > 0 || price > 0
-  const named = guests.map((guest) => guest.trim()).filter(Boolean)
+  const guestRow = offersGuests(event, isGuestRequest || includesSelf)
+  const named = guestRow ? guests.map((guest) => guest.trim()).filter(Boolean) : []
   const groupSize = (isGuestRequest ? 0 : includesSelf ? 1 : 0) + named.length
   const canRegister = groupSize > 0
   const past = isPast(event)
@@ -76,6 +86,8 @@ export function RegistrationSheet({ event, profile, destination, mine, myGuests,
       return
     }
     setError(failure.message)
+    // The seat guard's own refusals, raised on guests and the waiting list.
+    if (GUARD_REFUSALS.has(failure.cause?.message)) onStale?.()
   }
 
   async function register() {
@@ -108,9 +120,16 @@ export function RegistrationSheet({ event, profile, destination, mine, myGuests,
         setStep('done')
         return
       }
+      // An exercise the organizer approves by hand: asked, not seated.
+      if (status === 'requested') {
+        setOutcome({ title: 'وصل طلبك', body: 'يوصلك تنبيه أول ما يقبله المشرف', mark: 'request' })
+        setStep('done')
+        return
+      }
       if (status === 'seats_full') { setStep('waitlist'); return }
       if (status === 'registration_closed_full') { setStep('closed'); return }
       setError(SEAT_MESSAGES[status] ?? 'تعذر إكمال التسجيل.')
+      if (STALE_STATUSES.has(status)) onStale?.()
     } catch (failure) {
       await handleFailure(failure)
     } finally {
@@ -126,7 +145,7 @@ export function RegistrationSheet({ event, profile, destination, mine, myGuests,
       setOutcome({ title: 'أنت في قائمة الانتظار', body: 'أول ما يتحرر مقعد ينحجز لك ويوصلك تنبيه.' })
       setStep('done')
     } catch (failure) {
-      if (failure.paymentOwedEventId) await handleFailure(failure)
+      if (failure.paymentOwedEventId || GUARD_REFUSALS.has(failure.cause?.message)) await handleFailure(failure)
       else setError('تعذر الانضمام لقائمة الانتظار.')
     } finally {
       setBusy(false)
@@ -213,7 +232,15 @@ export function RegistrationSheet({ event, profile, destination, mine, myGuests,
                 </div>
               `
             : html`
-                <button class="sheet-card" onClick=${() => setIncludesSelf(!includesSelf)}
+                <button class="sheet-card"
+                        onClick=${() => {
+                          const next = !includesSelf
+                          setIncludesSelf(next)
+                          setError(null)
+                          // Guests on their own are not offered here, so the
+                          // names go with the seat they were riding on.
+                          if (!next && !offersGuests(event, false)) { setGuests([]); setShowGuests(false) }
+                        }}
                         aria-pressed=${includesSelf}>
                   <${MemberAvatar} name=${profile?.name} url=${profile?.avatar_url} />
                   <span class="grow">
@@ -224,7 +251,9 @@ export function RegistrationSheet({ event, profile, destination, mine, myGuests,
                 </button>
               `}
 
-          ${showGuests
+          ${!guestRow
+            ? null
+            : showGuests
             ? html`
                 <div class="vstack" style="gap:9px">
                   ${guests.map(
@@ -361,7 +390,7 @@ export function RegistrationSheet({ event, profile, destination, mine, myGuests,
       ${step === 'done' &&
       html`
         <div class="change" key="done">
-          <div class="done-mark">✓</div>
+          <div class="done-mark">${outcome?.mark === 'request' ? html`<${Icon.paperplane} />` : '✓'}</div>
           <div class="done-title">${outcome?.title}</div>
           <div class="done-sub">${outcome?.body}</div>
           <button class="action action-prominent" onClick=${() => finish(null)}>تم</button>

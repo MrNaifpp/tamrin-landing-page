@@ -155,6 +155,10 @@ export const Icon = {
       stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg>`,
   clock: () => html`<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
       stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3 2"/></svg>`,
+  hourglass: () => html`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+      stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5h11M6.5 20.5h11"/><path d="M7.5 3.5c0 4.6 4.5 5.6 4.5 8.5S7.5 15.9 7.5 20.5M16.5 3.5c0 4.6-4.5 5.6-4.5 8.5s4.5 3.9 4.5 8.5"/></svg>`,
+  xmarkCircle: () => html`<svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path fill-rule="evenodd" d="M12 2.6a9.4 9.4 0 1 1 0 18.8 9.4 9.4 0 0 1 0-18.8zm-2.9 5.2a.9.9 0 0 0-1.3 1.3L10.7 12l-2.9 2.9a.9.9 0 1 0 1.3 1.3l2.9-2.9 2.9 2.9a.9.9 0 0 0 1.3-1.3L13.3 12l2.9-2.9a.9.9 0 0 0-1.3-1.3L12 10.7z"/></svg>`,
+  paperplane: () => html`<svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M21.2 3.1a.9.9 0 0 0-1-.2L3.4 9.9a.9.9 0 0 0 0 1.7l6.6 2.4 2.4 6.6a.9.9 0 0 0 1.7 0l7-16.8a.9.9 0 0 0 .1-.7zm-10.4 9.6-4.2-1.5 10.2-4.3z"/></svg>`,
   close: () => html`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
       stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`,
   calendar: () => html`<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"

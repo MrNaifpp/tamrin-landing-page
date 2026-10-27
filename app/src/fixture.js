@@ -4,7 +4,9 @@
 // and every RPC is answered from memory, so the whole walk — the shelf and
 // the archive, register, add and remove a guest, pay by card or by transfer,
 // an older workout that blocks registering until it is paid, decline, the
-// waiting list, a published lineup, rating a player — can be exercised on a
+// waiting list, a published lineup, rating a player, a registration that
+// opens later, guests switched off, and asking an organizer who approves by
+// hand — can be exercised on a
 // laptop with no Supabase project, no email code, no card, and no risk of
 // writing to a real group. The flag is sticky for the tab so navigation keeps it.
 
@@ -28,6 +30,7 @@ const FREE_WS = '33333333-3333-4333-8333-333333333333'
 const PAID_WS = '99999999-9999-4999-8999-999999999999'
 const OWED_WS = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const VOLLEY_WS = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+const SETTINGS_WS = 'c4c4c4c4-c4c4-4c4c-8c4c-c4c4c4c4c4c4'
 
 const PAID_EVENT = '44444444-4444-4444-8444-444444444444'
 const FREE_EVENT = '55555555-5555-4555-8555-555555555555'
@@ -36,6 +39,9 @@ const LINEUP_EVENT = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
 const OWED_EVENT = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
 const NEXT_OWED_EVENT = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'
 const VOLLEY_EVENT = 'f1f1f1f1-f1f1-4f1f-8f1f-f1f1f1f1f1f1'
+const APPROVAL_EVENT = 'd5d5d5d5-d5d5-4d5d-8d5d-d5d5d5d5d5d5'
+const OPENING_EVENT = 'e6e6e6e6-e6e6-4e6e-8e6e-e6e6e6e6e6e6'
+const DECLINED_EVENT = 'f7f7f7f7-f7f7-4f7f-8f7f-f7f7f7f7f7f7'
 const PAST_A = 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1'
 const PAST_B = 'b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2'
 const PAST_C = 'c3c3c3c3-c3c3-4c3c-8c3c-c3c3c3c3c3c3'
@@ -62,7 +68,8 @@ const workspaces = [
   workspace({ id: FREE_WS, name: 'عضو: قبول فوري وتقييم', invite_code: 'DEMO-USER', sport: 'soccer', symbol: 'figure.soccer', member_count: 18 }),
   workspace({ id: PAID_WS, name: 'عضو: القطة والضيوف', invite_code: 'DEMO-PAID', sport: 'soccer', symbol: 'figure.soccer', color: 'orange', member_count: 16 }),
   workspace({ id: OWED_WS, name: 'عضو: قطة سابقة', invite_code: 'DEMO-OWED', sport: 'basketball', symbol: 'figure.basketball', color: 'red', member_count: 10 }),
-  workspace({ id: VOLLEY_WS, name: 'طائرة الشاطئ', invite_code: 'DEMO-VOLL', sport: 'volleyball', symbol: 'figure.volleyball', color: 'blue', member_count: 12 })
+  workspace({ id: VOLLEY_WS, name: 'طائرة الشاطئ', invite_code: 'DEMO-VOLL', sport: 'volleyball', symbol: 'figure.volleyball', color: 'blue', member_count: 12 }),
+  workspace({ id: SETTINGS_WS, name: 'عضو: إعدادات التسجيل', invite_code: 'DEMO-RULE', sport: 'soccer', symbol: 'figure.soccer', color: 'purple', member_count: 20 })
 ]
 
 const event = (fields) => ({
@@ -86,6 +93,9 @@ const event = (fields) => ({
   my_response_status: null,
   capacity_policy: 'waitlist',
   requires_payment_action: false,
+  registration_opens_at: null,
+  approval_mode: 'auto',
+  guests_allowed: true,
   ...fields
 })
 
@@ -129,6 +139,24 @@ const events = [
     location: 'شاطئ نصف القمر', start_date: hoursFromNow(90), end_date: hoursFromNow(92),
     max_participants: 12, cancelled_at: hoursFromNow(-2), is_cancelled: true,
     cancellation_reason_code: 'weather'
+  }),
+  // The organizer approves every seat by hand: registering sends a request.
+  event({
+    id: APPROVAL_EVENT, workspace_id: SETTINGS_WS, name: 'بموافقة المشرف: أرسل طلبك',
+    location: 'ملعب الياسمين', start_date: hoursFromNow(46), end_date: hoursFromNow(47.5),
+    max_participants: 14, approval_mode: 'manual'
+  }),
+  // Opens two minutes after the page loads, so both sides of the countdown
+  // can be seen; guests are switched off.
+  event({
+    id: OPENING_EVENT, workspace_id: SETTINGS_WS, name: 'يفتح بعد شوي: بدون ضيوف',
+    location: 'ملعب الياسمين', start_date: hoursFromNow(70), end_date: hoursFromNow(71.5),
+    max_participants: 14, registration_opens_at: hoursFromNow(2 / 60), guests_allowed: false
+  }),
+  event({
+    id: DECLINED_EVENT, workspace_id: SETTINGS_WS, name: 'طلب ما انقبل',
+    location: 'ملعب الياسمين', start_date: hoursFromNow(118), end_date: hoursFromNow(119.5),
+    max_participants: 14, approval_mode: 'manual'
   })
 ]
 
@@ -205,8 +233,13 @@ const rosters = {
     ...CAST.slice(0, 6).map((person, i) => castSeat(person, i))
   ],
   [NEXT_OWED_EVENT]: CAST.slice(0, 5).map((person, i) => castSeat(person, i, { payment_status: 'pending', payment_declared_at: null })),
-  [VOLLEY_EVENT]: CAST.slice(0, 7).map((person, i) => castSeat(person, i))
+  [VOLLEY_EVENT]: CAST.slice(0, 7).map((person, i) => castSeat(person, i)),
+  [APPROVAL_EVENT]: CAST.slice(0, 6).map((person, i) => castSeat(person, i)),
+  [DECLINED_EVENT]: CAST.slice(0, 9).map((person, i) => castSeat(person, i))
 }
+
+/// event_registration_requests, the member's own: pending | declined.
+const requests = { [DECLINED_EVENT]: 'declined' }
 
 /// The split on LINEUP_EVENT, published: the member is on the second side.
 const lineupSeats = rosters[LINEUP_EVENT]
@@ -250,6 +283,26 @@ function guardDebt(eventId) {
   if (!owed) return
   const error = new Error('عليك قطة لم تُدفع من تمرين سابق. ادفعها أولاً عشان تسجّل.')
   error.paymentOwedEventId = owed.id
+  throw error
+}
+
+const opensLater = (e) => Boolean(e.registration_opens_at) && new Date(e.registration_opens_at).getTime() > Date.now()
+
+/// guard_registration_settings: the seat guard's refusals on guests and the
+/// waiting list, raised and translated the way api.js translates the server's.
+const GUARD_MESSAGES = {
+  registration_not_open: 'التسجيل في هذا الموعد لم يفتح بعد.',
+  guests_not_allowed: 'تسجيل الضيوف موقف في هذا التمرين.',
+  approval_required: 'التسجيل في هذا التمرين بموافقة المشرف.'
+}
+function guardSettings(e, { guests = false } = {}) {
+  const code = opensLater(e) ? 'registration_not_open'
+    : guests && e.guests_allowed === false ? 'guests_not_allowed'
+      : e.approval_mode === 'manual' ? 'approval_required'
+        : null
+  if (!code) return
+  const error = new Error(GUARD_MESSAGES[code])
+  error.cause = { message: code }
   throw error
 }
 
@@ -334,8 +387,18 @@ export function demoRpc(name, params = {}) {
     case 'register_event_seat': {
       const e = eventById(params.p_event_id)
       if (mySeat(e.id)) return { status: 'already_joined', payment_status: 'pending' }
-      guardDebt(e.id)
       const guests = (params.p_guest_names ?? []).map((raw) => raw.trim()).filter(Boolean)
+      // register_event_seat's settings checks, in the server's order.
+      if (opensLater(e)) return { status: 'registration_not_open', registration_opens_at: e.registration_opens_at }
+      if (guests.length && e.guests_allowed === false) return { status: 'guests_not_allowed' }
+      if (e.approval_mode === 'manual') {
+        if (requests[e.id] === 'declined') return { status: 'request_declined' }
+        guardDebt(e.id)
+        requests[e.id] = 'pending'
+        e.my_response_status = null
+        return { status: 'requested', event_id: e.id }
+      }
+      guardDebt(e.id)
       const groupSize = 1 + guests.length
       const paid = e.total_price > 0
       if (e.max_participants != null && liveSeats(e.id).length + groupSize > e.max_participants) {
@@ -366,6 +429,7 @@ export function demoRpc(name, params = {}) {
       if (!guests.length) return { status: 'empty_guests' }
       if (name === 'register_event_guests' && !mySeat(e.id)) return { status: 'not_registered' }
       if (name === 'register_event_guest_only' && mySeat(e.id)) return { status: 'self_already_registered' }
+      guardSettings(e, { guests: true })
       guardDebt(e.id)
       if (e.max_participants != null && liveSeats(e.id).length + guests.length > e.max_participants) return { status: 'seats_full' }
       const paid = e.total_price > 0
@@ -403,12 +467,20 @@ export function demoRpc(name, params = {}) {
       return { status: 'declined' }
     }
     case 'join_waitlist':
+      guardSettings(eventById(params.p_event_id))
       guardDebt(params.p_event_id)
       rosterOf(params.p_event_id).push(seat({
         participant_id: ME, user_id: ME, display_name: profile.name,
         is_waitlisted: true, payment_status: null, payment_declared_at: null
       }))
       return { status: 'joined' }
+    case 'get_my_registration_request':
+      return requests[params.p_event_id] ? { status: requests[params.p_event_id] } : null
+    case 'withdraw_registration_request': {
+      if (requests[params.p_event_id] !== 'pending') return { status: 'not_found' }
+      delete requests[params.p_event_id]
+      return { status: 'withdrawn' }
+    }
     case 'leave_waitlist':
       rosters[params.p_event_id] = rosterOf(params.p_event_id).filter((row) => !(row.user_id === ME && row.is_waitlisted))
       return { status: 'left' }

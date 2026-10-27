@@ -799,6 +799,53 @@ img { display: block; }
 .dot-green { background: var(--money-green); color: #fff; }
 .dot-orange { background: var(--orange); color: #3a2500; }
 
+/* closedRegistrationLabel: before registration opens, the register button
+   itself at half strength — the same place and shape the member will press
+   once it opens, just not yet. */
+.action-inert { opacity: 0.5; pointer-events: none; }
+
+/* requestPendingRow: «طلبك عند المشرف … اسحب الطلب». */
+.request-row .request-icon { display: grid; color: var(--orange); }
+.request-row .leave {
+  margin-inline-start: auto;
+  color: rgba(255, 69, 58, 0.95);
+  font-size: 13px;
+  font-weight: 500;
+}
+.request-row .spinner-small { margin-inline-start: auto; }
+
+/* RegistrationCountdownPanel, where the list will be until it opens. */
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-top: 8px;
+  padding: 26px 16px;
+  border-radius: var(--card-radius);
+  background: var(--glass);
+}
+.countdown-title { font-size: 15px; font-weight: 500; color: rgba(255, 255, 255, 0.75); }
+.countdown-units { display: flex; align-items: center; gap: 8px; width: 100%; }
+.countdown-unit {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.countdown-value {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+.countdown-label { font-size: 12px; font-weight: 500; color: rgba(255, 255, 255, 0.55); }
+.countdown-separator { padding-bottom: 20px; font-size: 30px; font-weight: 700; color: rgba(255, 255, 255, 0.35); }
+.countdown-when { font-size: 14px; font-weight: 500; color: rgba(255, 255, 255, 0.6); }
+
 .card {
   background: var(--glass);
   border-radius: var(--card-radius);

@@ -32,6 +32,9 @@ const SERVER_MESSAGES = new Map([
   ['Pending guest request must be resolved before self registration', 'عندك طلب ضيوف معلّق. أنهِه قبل ما تسجل نفسك.'],
   ['A guest must be added by a workspace member', 'الضيف لازم يضيفه عضو في التمرين.'],
   ['Guest registration mode is required', 'اختر طريقة تسجيل الضيوف.'],
+  ['registration_not_open', 'التسجيل في هذا الموعد لم يفتح بعد.'],
+  ['guests_not_allowed', 'تسجيل الضيوف موقف في هذا التمرين.'],
+  ['approval_required', 'التسجيل في هذا التمرين بموافقة المشرف.'],
   ['Not authenticated', 'انتهت جلستك. سجّل الدخول مرة ثانية.'],
   ['Not a workspace member', 'ما أنت عضو في هذا التمرين.'],
   ['Player is not a workspace member', 'هذا اللاعب مو عضو في التمرين.'],
@@ -240,6 +243,19 @@ export const leaveWaitlist = (eventId, userId) =>
 /// `refund_id` is set when money is on its way back.
 export const removeMyGuest = (participantId) =>
   rpc('remove_my_guest', { p_participant_id: participantId })
+
+// ── Registration requests ─────────────────────────────────────────────────
+
+/// On an exercise the organizer approves by hand, register_event_seat answers
+/// 'requested' instead of seating anyone. This reads where the member's own
+/// request stands: { status: 'pending' | 'declined' }, or null when none.
+export const getMyRegistrationRequest = (eventId) =>
+  rpc('get_my_registration_request', { p_event_id: eventId })
+
+/// «اسحب الطلب»: takes back the member's request and the guests still
+/// waiting with it.
+export const withdrawRegistrationRequest = (eventId) =>
+  rpc('withdraw_registration_request', { p_event_id: eventId })
 
 // ── Home feed ─────────────────────────────────────────────────────────────
 
