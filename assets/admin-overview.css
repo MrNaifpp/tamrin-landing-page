@@ -1,0 +1,161 @@
+/* =========================================================================
+   تمرين — لوحة التحكم: تبويب «نظرة عامة»
+   يبني على admin.css ورموز site.css. لا يعيد تعريف أي رمز.
+   ========================================================================= */
+
+/* site.css يعطي كل <section> حشوة 88px لصفحة الهبوط؛ اللوحة لا تريدها. */
+body.admin section { padding-block: 0; }
+
+.ov { display: grid; gap: 18px; }
+.ov-h {
+  margin-block: 14px -4px; font-size: 14px; font-weight: 700; color: var(--text-3);
+}
+.ov-row { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); }
+.ov-row.three { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.ov-body { padding: 20px 22px 22px; }
+.ov-foot {
+  margin-block-start: 16px; padding-block-start: 14px; border-block-start: 1px solid var(--line);
+  font-size: 14px; line-height: 1.6; color: var(--text-2);
+}
+.ov-foot b { color: var(--text); }
+.ov-go {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  min-height: 34px; padding-inline: 14px; border-radius: var(--r-pill);
+  background: var(--secondary); font-size: 14px; font-weight: 700; color: var(--text);
+}
+.ov-go svg { width: 14px; height: 14px; }
+.ov-go:hover { background: var(--line-strong); }
+.ov-link { font-size: 13px; font-weight: 700; color: var(--text-2); text-decoration: underline; text-underline-offset: 3px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ألوان الخانات الخمس: دافئ = لم يبدأ، أخضر = يلعب، رمادي = يبتعد */
+.c-none { background: var(--peach); }
+.c-idle { background: color-mix(in srgb, var(--peach) 42%, #fff); }
+.c-act  { background: var(--green); }
+.c-slip { background: #b8b8b8; }
+.c-gone { background: #dcdcdc; }
+.c-lime { background: var(--lime); }
+.c-ink  { background: var(--ink); }
+.c-mint { background: var(--mint); }
+
+/* ------------------------------------------------ أين مستخدموك الآن؟ */
+.life-fam { display: flex; gap: 3px; margin-block-end: 7px; }
+.life-fam span {
+  min-width: 0; padding-block-start: 6px; border-block-start: 2px solid var(--line-strong);
+  font-size: 13px; font-weight: 700; color: var(--text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.life-fam span b { color: var(--text); }
+.life-fam em { font-style: normal; }
+.life-bar { display: flex; gap: 3px; height: 38px; }
+.life-bar i {
+  display: grid; place-items: center; min-width: 0; border-radius: 9px;
+  font-style: normal; font-size: 13px; font-weight: 700; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.life-bar i.c-act { color: #fff; }
+.life-keys {
+  display: grid; gap: 12px; margin-block-start: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+.life-key {
+  display: flex; flex-direction: column; gap: 4px; padding: 14px 16px;
+  border: 1px solid var(--line); border-radius: 18px;
+}
+.life-key .t { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+.life-key .t i { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+.life-key .n { font-size: 28px; font-weight: 700; line-height: 1.15; letter-spacing: -.02em; }
+.life-key .n small { font-size: 14px; font-weight: 500; color: var(--text-3); letter-spacing: 0; }
+.life-key .d { font-size: 13px; line-height: 1.5; color: var(--text-2); flex: 1; }
+.life-key .ov-link { margin-block-start: 4px; }
+
+/* ------------------------------------------------ رحلة المستخدم الجديد */
+.fun { display: grid; gap: 6px; }
+.fun-step { display: grid; grid-template-columns: 138px 1fr 46px; gap: 12px; align-items: center; font-size: 15px; }
+.fun-step .track { height: 34px; border-radius: 10px; background: var(--page); }
+.fun-step .track i {
+  display: flex; align-items: center; height: 100%; padding-inline: 12px;
+  border-radius: 10px; background: var(--green);
+  font-style: normal; font-size: 14px; font-weight: 700; color: #fff;
+}
+.fun-step .pc { font-weight: 700; text-align: end; }
+.fun-drop { padding-inline-start: 150px; font-size: 13px; color: var(--text-3); }
+.fun-drop.big span {
+  display: inline-block; padding: 2px 10px; border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--peach) 48%, transparent); color: #8a4b18; font-weight: 700;
+}
+
+/* ---------------------------------------------------------- بلا مجموعة */
+.big-n { display: flex; align-items: baseline; gap: 10px; margin-block-end: 14px; }
+.big-n b { font-size: 44px; line-height: 1; letter-spacing: -.02em; }
+.big-n span { font-size: 15px; color: var(--text-2); }
+.split { display: flex; gap: 3px; height: 14px; margin-block: 8px 8px; }
+.split i { border-radius: 5px; min-width: 0; }
+.keys { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--text-2); }
+.keys span { display: inline-flex; align-items: center; gap: 6px; }
+.keys i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.keys b { color: var(--text); }
+.lbl { font-size: 13px; font-weight: 700; color: var(--text-3); }
+.facts { display: grid; gap: 12px; margin-block: 18px; }
+.facts li { display: grid; grid-template-columns: 54px 1fr; gap: 12px; align-items: baseline; }
+.facts li b { font-size: 22px; line-height: 1.2; text-align: center; padding-block: 4px; border-radius: 12px; background: var(--page); }
+.facts li span { font-size: 15px; line-height: 1.5; }
+.facts li small { display: block; font-size: 13px; color: var(--text-3); }
+
+/* ------------------------------------------------------ نشاط المستخدمين */
+.act { display: grid; gap: 26px; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+.wk { display: grid; grid-template-columns: repeat(12, 1fr); gap: 7px; align-items: end; height: 176px; }
+.wk .col { display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; height: 100%; }
+.wk .col b { font-size: 12px; font-weight: 700; color: var(--text-3); text-align: center; }
+.wk .col i { display: block; border-radius: 5px; }
+.wk .col.now b { color: var(--text); font-size: 13px; }
+.wk-x { display: grid; grid-template-columns: repeat(12, 1fr); gap: 7px; margin-block: 7px 12px; font-size: 12px; color: var(--text-3); }
+.wk-x span { white-space: nowrap; text-align: center; }
+.wk-x span.now { color: var(--text); font-weight: 700; }
+.mini { display: grid; gap: 16px; align-content: start; }
+.mini > div { padding-block-end: 16px; border-block-end: 1px solid var(--line); }
+.mini > div:last-child { padding-block-end: 0; border-block-end: 0; }
+.mini .v { display: flex; align-items: baseline; gap: 8px; font-size: 30px; font-weight: 700; line-height: 1.2; letter-spacing: -.02em; }
+.mini .v small { font-size: 13px; font-weight: 700; color: #3f9c5f; letter-spacing: 0; }
+.mini .v small.down { color: #a32b2b; }
+.mini .s { font-size: 13px; line-height: 1.5; color: var(--text-2); }
+
+/* ------------------------------------------------------------ القوائم */
+.rows { display: grid; gap: 11px; }
+.rows li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) 42px; gap: 12px; align-items: center; font-size: 15px; }
+.rows li small { display: block; font-size: 12.5px; color: var(--text-3); line-height: 1.3; }
+.rows .bar { height: 8px; border-radius: 99px; background: var(--secondary); overflow: hidden; }
+.rows .bar i { display: block; height: 100%; border-radius: 99px; background: var(--green); }
+.rows .pc { font-weight: 700; text-align: end; font-size: 14px; }
+
+.ov .panel-head .count { display: block; }
+table.data.tight th, table.data.tight td { padding: 12px 22px; }
+
+.gap-top { margin-block-start: 18px; }
+
+.wk.short { height: 124px; margin-block-start: 10px; }
+.rows.acts { margin-block-start: 10px; gap: 9px; }
+.rows.acts li { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) 34px; font-size: 14px; }
+.rows.acts .bar i { background: var(--ink); }
+
+@media (max-width: 720px) {
+  .ov-body { padding: 16px; }
+  .act { grid-template-columns: 1fr; }
+  .fun-step { grid-template-columns: 104px 1fr 40px; font-size: 14px; }
+  .fun-drop { padding-inline-start: 116px; }
+  .life-fam span { font-size: 12px; }
+  .life-fam em { display: none; }
+  .life-keys { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .life-key { padding: 12px 14px; }
+  .life-key .n { font-size: 24px; }
+  .wk, .wk-x { gap: 4px; }
+  .wk .col b { font-size: 11px; }
+  .seg { display: flex; }
+  .seg button { flex: 1; padding-inline: 10px; font-size: 14px; white-space: nowrap; }
+  table.data.tight th, table.data.tight td { padding-inline: 16px; }
+}
+  
+
+.ov-empty { padding: 56px 22px; text-align: center; color: var(--text-2); }
+.ov-empty b { display: block; font-size: 17px; color: var(--text); margin-block-end: 6px; }
+table.data tr.clickable { cursor: pointer; }

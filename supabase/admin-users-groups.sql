@@ -9,6 +9,7 @@
 --      فقط، وتقبل فلترًا جديدًا p_workspace:
 --        ''        كل المستخدمين (السلوك القديم)
 --        'active'  من هو في مجموعة نشطة واحدة على الأقل
+--        'none'    من ليس في أي مجموعة
 --        <uuid>    أعضاء هذه المجموعة فقط
 --   2) admin_list_active_workspaces: المجموعات النشطة لقائمة الفلتر.
 --
@@ -104,7 +105,7 @@ begin
   v_offset    := (p_page - 1) * p_page_size;
   v_q         := nullif(btrim(coalesce(p_search, '')), '');
   v_ws        := nullif(btrim(coalesce(p_workspace, '')), '');
-  if v_ws is not null and v_ws <> 'active' then
+  if v_ws is not null and v_ws not in ('active', 'none') then
     v_ws_id := v_ws::uuid;
   end if;
 
@@ -127,6 +128,8 @@ begin
                  select 1 from mine x
                  where x.user_id = u.user_id
                    and x.workspace_id in (select public.admin_active_workspace_ids())))
+           or (v_ws = 'none' and not exists (
+                 select 1 from mine x where x.user_id = u.user_id))
            or (v_ws_id is not null and exists (
                  select 1 from mine x
                  where x.user_id = u.user_id and x.workspace_id = v_ws_id)))

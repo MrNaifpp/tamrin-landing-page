@@ -272,16 +272,17 @@
 
   /* --------------------------------------------------------- الأقسام */
 
-  let lastTab = 'users';
+  const TABS = { home: ['tabHome', 'panelHome'], users: ['tabUsers', 'panelUsers'], events: ['tabEvents', 'panelEvents'] };
+  let lastTab = 'home';
 
   function selectTab(which) {
     lastTab = which;
-    const users = which === 'users';
-    $('tabUsers').setAttribute('aria-selected', String(users));
-    $('tabEvents').setAttribute('aria-selected', String(!users));
-    $('panelUsers').hidden = !users;
-    $('panelEvents').hidden = users;
+    Object.entries(TABS).forEach(([name, [tab, panel]]) => {
+      $(tab).setAttribute('aria-selected', String(name === which));
+      $(panel).hidden = name !== which;
+    });
   }
+  $('tabHome').addEventListener('click', () => selectTab('home'));
   $('tabUsers').addEventListener('click', () => selectTab('users'));
   $('tabEvents').addEventListener('click', () => selectTab('events'));
 
@@ -294,6 +295,7 @@
     $('segTabs').hidden = onEvent;
     if (onEvent) {
       lastTab = 'events';            // «رجوع» يعيد إلى جدول الفعاليات
+      $('panelHome').hidden = true;
       $('panelUsers').hidden = true;
       $('panelEvents').hidden = true;
       TamrinEvent.open(decodeURIComponent(m[1]));
@@ -346,8 +348,33 @@
 
   /* ----------------------------------------------------------- إقلاع */
 
+  /* ------------------------------------------------------- نظرة عامة */
+
+  TamrinHome.init($('panelHome'), {
+    onShowNoGroup: () => {
+      workspace = 'none';
+      $('wsFilter').value = 'none';
+      page = 1;
+      loadUsers();
+      selectTab('users');
+    },
+    onOpenPlayer: (userId) => TamrinPlayer.open(userId)
+  });
+
+  async function loadHome() {
+    const el = $('panelHome');
+    TamrinHome.message(el, 'جارٍ التحميل…', '');
+    try {
+      TamrinHome.render(el, await TamrinData.homeInsights());
+    } catch (e) {
+      TamrinHome.message(el, 'تعذّر جلب الأرقام',
+        'إن لم يُنفَّذ الملف supabase/admin-home-insights.sql على قاعدة الإنتاج بعد، نفّذه ثم حدّث الصفحة.');
+    }
+  }
+
   function loadAll() {
     loadStats();
+    loadHome();
     loadUsers();
     loadWorkspaceFilter();
     loadEvents();

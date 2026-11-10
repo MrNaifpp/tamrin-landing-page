@@ -421,7 +421,55 @@
     return rpc('admin_overview');
   }
 
-  /* workspace: '' الكل، 'active' في مجموعة نشطة، أو معرّف مجموعة. */
+  /* أرقام تبويب «نظرة عامة». الشكل مطابق لما تُرجعه admin_home_insights. */
+  async function homeInsights() {
+    if (!USE_MOCK) return rpc('admin_home_insights');
+    await wait(300);
+    const weekStart = (k) => new Date(now - (k + 1) * 7 * DAY).toISOString();
+    const series = (vals, key, extra) => vals.map((v, i) => ({
+      start: weekStart(vals.length - 1 - i), [key]: v, ...(extra ? extra(v, i) : {})
+    }));
+    const firsts = [19, 18, 21, 20, 25, 22, 27, 25, 29, 30, 29, 36];
+    return {
+      generatedAt: new Date(now).toISOString(),
+      features: {
+        events: 82, recurring: 56, mapLink: 43, lineup: 30, manual: 9,
+        seats: 940, guestSeats: 169, players: 277, raters: 80,
+        feedback: [{ feature: 'lineup', avg: 4.6, count: 31 }]
+      },
+      reach: {
+        users: 486, pushUsers: 360, ios: 328, web: 32, sent7: 1842, failed7: 77,
+        openToday: 96, openWeek: 211, openOlder: 53
+      },
+      life: { total: 486, noGroup: 97, notRegistered: 58, active: 214, slipping: 63, gone: 54 },
+      journey: { signups: 142, joined: 96, registered: 71, registeredTwice: 44, joinedFirstHour: 79 },
+      noGroup: { total: 97, d7: 21, d30: 33, older: 43, opened7: 34, reachable: 61 },
+      activity: {
+        weeks: series([148, 160, 171, 186, 198, 214, 229, 245, 262, 281, 297, 318], 'total',
+          (v, i) => ({ first: firsts[i] })),
+        active7: 318, prev7: 297,
+        actions: { open: 307, register: 171, rate: 64, decline: 41, join: 38, create: 19, signup: 38 },
+        prevMonth: 352, prevMonthBack: 275, olderMonth: 310, olderMonthBack: 226
+      },
+      rating: {
+        members: 389, raters: 138, rated: 251, ratings: 1264, ratings7: 118, perRater: 9.2,
+        repeatRaters: 57, since: new Date(now - 84 * DAY).toISOString(),
+        weeks: series([212, 164, 121, 96, 88, 79, 84, 71, 66, 73, 92, 118], 'count'),
+        coverNone: 138, coverFew: 97, coverMany: 154,
+        groupsTotal: 41, groupsRating: 17,
+        groups: MOCK_WORKSPACES.slice(0, 5).map((w, i) => ({
+          name: w.name, members: [26, 22, 18, 14, 9][i],
+          raters: [19, 13, 8, 3, 1][i], ratings: [312, 201, 96, 27, 4][i]
+        })),
+        topRaters: MOCK_USERS.slice(0, 5).map((u, i) => ({
+          user_id: u.user_id, name: u.name, ratees: [41, 36, 29, 25, 22][i],
+          last_at: new Date(now - [0, 1, 3, 5, 6][i] * DAY).toISOString()
+        }))
+      }
+    };
+  }
+
+  /* workspace: '' الكل، 'active' في مجموعة نشطة، 'none' بلا مجموعة، أو معرّف مجموعة. */
   async function users({ search = '', page = 1, pageSize = 12, workspace = '' } = {}) {
     if (USE_MOCK) {
       await wait(200);
@@ -431,7 +479,8 @@
         .filter((u) => !q || u.name.includes(q) || (u.stc_pay_number || '').includes(q))
         .filter((u) => !workspace
           || (workspace === 'active' ? u.workspaces.some((w) => active.has(w.id))
-                                     : u.workspaces.some((w) => w.id === workspace)));
+              : workspace === 'none' ? u.workspaces.length === 0
+              : u.workspaces.some((w) => w.id === workspace)));
       const start = (page - 1) * pageSize;
       return { rows: filtered.slice(start, start + pageSize), total: filtered.length };
     }
@@ -575,7 +624,7 @@
 
   global.TamrinData = {
     signIn, signOut, restoreSession, isMock,
-    overview, users, activeWorkspaces, activeEvents, eventDetails, pastEvents,
+    overview, homeInsights, users, activeWorkspaces, activeEvents, eventDetails, pastEvents,
     playerProfile, deleteRating
   };
 })(window);

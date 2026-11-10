@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="assets/admin.css?v=6" />
   <link rel="stylesheet" href="assets/admin-sheet.css?v=1" />
   <link rel="stylesheet" href="assets/admin-event.css?v=3" />
+  <link rel="stylesheet" href="assets/admin-overview.css?v=1" />
 </head>
 
 <body class="admin">
@@ -91,12 +92,16 @@
 
     <!-- المفتاح -->
     <div class="seg" id="segTabs" role="tablist" aria-label="الأقسام">
-      <button type="button" role="tab" id="tabUsers" aria-selected="true" aria-controls="panelUsers">المستخدمون</button>
+      <button type="button" role="tab" id="tabHome" aria-selected="true" aria-controls="panelHome">نظرة عامة</button>
+      <button type="button" role="tab" id="tabUsers" aria-selected="false" aria-controls="panelUsers">المستخدمون</button>
       <button type="button" role="tab" id="tabEvents" aria-selected="false" aria-controls="panelEvents">الفعاليات النشطة</button>
     </div>
 
+    <!-- نظرة عامة — يرسمها assets/admin-home.js -->
+    <div class="ov" id="panelHome" role="tabpanel" aria-labelledby="tabHome"></div>
+
     <!-- المستخدمون -->
-    <section class="panel" id="panelUsers" role="tabpanel" aria-labelledby="tabUsers">
+    <section class="panel" id="panelUsers" role="tabpanel" aria-labelledby="tabUsers" hidden>
       <div class="panel-head">
         <div>
           <h2>المستخدمون</h2>
@@ -108,6 +113,7 @@
           <select id="wsFilter">
             <option value="">كل المستخدمين</option>
             <option value="active">في مجموعة نشطة</option>
+            <option value="none">بلا مجموعة</option>
           </select>
         </label>
         <label class="search">
@@ -221,7 +227,7 @@
   <div class="sheet-body" id="sheetBody"></div>
 </aside>
 
-<script src="assets/admin-data.js?v=8"></script>
+<script src="assets/admin-data.js?v=9"></script>
 <script src="assets/admin-ratings.js?v=1"></script>
 <script src="assets/admin-search.js?v=1"></script>
 <script src="assets/admin-player.js?v=1"></script>
@@ -229,6 +235,7 @@
 <script src="assets/admin-event-parts.js?v=1"></script>
 <script src="assets/admin-event-history.js?v=1"></script>
 <script src="assets/admin-event.js?v=4"></script>
-<script src="assets/admin.js?v=7"></script>
+<script src="assets/admin-home.js?v=1"></script>
+<script src="assets/admin.js?v=8"></script>
 </body>
 </html>
