@@ -141,6 +141,18 @@ body.admin { background: var(--page); }
   width: 17px; height: 17px; opacity: .45; pointer-events: none;
 }
 
+.panel-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ws-filter select {
+  min-height: 42px; max-width: 220px; padding-inline: 16px 34px;
+  font: inherit; font-size: 15px; color: var(--text);
+  background: var(--page); border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill); cursor: pointer;
+}
+.ws-filter select:focus { outline: none; border-color: var(--green); }
+
+/* أسماء المجموعات في صفّ المستخدم */
+.groups { display: flex; flex-wrap: wrap; gap: 6px; }
+
 /* ------------------------------------------------------------ الجداول */
 .table-scroll { overflow-x: auto; }
 table.data { width: 100%; border-collapse: collapse; font-size: 15px; }
@@ -226,6 +238,7 @@ table.data td.num { font-variant-numeric: tabular-nums; }
   .admin-who .email { display: none; }
   .panel-head { padding: 16px; }
   .search input { width: 100%; }
+  .panel-tools, .panel-tools .search, .ws-filter, .ws-filter select { width: 100%; max-width: none; }
   table.data th, table.data td { padding: 12px 16px; }
   .stat-card { padding: 17px 18px; }
   .stat-card .v { font-size: 28px; }

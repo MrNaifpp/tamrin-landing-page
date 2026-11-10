@@ -12,7 +12,7 @@
   <noscript><link rel="stylesheet" href="assets/fonts.css?v=2" /></noscript>
 
   <link rel="stylesheet" href="assets/site.css?v=4" />
-  <link rel="stylesheet" href="assets/admin.css?v=5" />
+  <link rel="stylesheet" href="assets/admin.css?v=6" />
   <link rel="stylesheet" href="assets/admin-sheet.css?v=1" />
   <link rel="stylesheet" href="assets/admin-event.css?v=3" />
 </head>
@@ -102,6 +102,14 @@
           <h2>المستخدمون</h2>
           <span class="count" id="usersCount">—</span>
         </div>
+        <div class="panel-tools">
+        <label class="ws-filter">
+          <span class="sr-only">فلتر المجموعات</span>
+          <select id="wsFilter">
+            <option value="">كل المستخدمين</option>
+            <option value="active">في مجموعة نشطة</option>
+          </select>
+        </label>
         <label class="search">
           <span class="sr-only">ابحث في المستخدمين</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -110,6 +118,7 @@
           </svg>
           <input type="search" id="userSearch" placeholder="ابحث بالاسم أو الرقم" />
         </label>
+        </div>
       </div>
 
       <div class="table-scroll">
@@ -212,7 +221,7 @@
   <div class="sheet-body" id="sheetBody"></div>
 </aside>
 
-<script src="assets/admin-data.js?v=7"></script>
+<script src="assets/admin-data.js?v=8"></script>
 <script src="assets/admin-ratings.js?v=1"></script>
 <script src="assets/admin-search.js?v=1"></script>
 <script src="assets/admin-player.js?v=1"></script>
@@ -220,6 +229,6 @@
 <script src="assets/admin-event-parts.js?v=1"></script>
 <script src="assets/admin-event-history.js?v=1"></script>
 <script src="assets/admin-event.js?v=4"></script>
-<script src="assets/admin.js?v=6"></script>
+<script src="assets/admin.js?v=7"></script>
 </body>
 </html>

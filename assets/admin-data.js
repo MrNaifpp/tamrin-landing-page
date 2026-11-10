@@ -75,7 +75,13 @@
         : null,
       avatar_url: null,
       created_at: new Date(now - Math.floor(seeded(i + 7) * 96) * DAY).toISOString(),
-      workspace_count: 1 + Math.floor(seeded(i + 91) * 3)
+      workspace_count: 1 + Math.floor(seeded(i + 91) * 3),
+      workspaces: (() => {
+        const n = 1 + Math.floor(seeded(i + 91) * 3);
+        const first = Math.floor(seeded(i + 97) * MOCK_WORKSPACES.length);
+        return Array.from({ length: n }, (_, k) => MOCK_WORKSPACES[(first + k) % MOCK_WORKSPACES.length])
+          .sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+      })()
     };
   }).sort((a, b) => b.created_at.localeCompare(a.created_at));
 
@@ -415,19 +421,34 @@
     return rpc('admin_overview');
   }
 
-  async function users({ search = '', page = 1, pageSize = 12 } = {}) {
+  /* workspace: '' الكل، 'active' في مجموعة نشطة، أو معرّف مجموعة. */
+  async function users({ search = '', page = 1, pageSize = 12, workspace = '' } = {}) {
     if (USE_MOCK) {
       await wait(200);
       const q = search.trim();
-      const filtered = q
-        ? MOCK_USERS.filter((u) => u.name.includes(q) || (u.stc_pay_number || '').includes(q))
-        : MOCK_USERS;
+      const active = new Set(MOCK_EVENTS.map((e) => e.workspace_id));
+      const filtered = MOCK_USERS
+        .filter((u) => !q || u.name.includes(q) || (u.stc_pay_number || '').includes(q))
+        .filter((u) => !workspace
+          || (workspace === 'active' ? u.workspaces.some((w) => active.has(w.id))
+                                     : u.workspaces.some((w) => w.id === workspace)));
       const start = (page - 1) * pageSize;
       return { rows: filtered.slice(start, start + pageSize), total: filtered.length };
     }
-    return rpc('admin_list_users', {
-      p_search: search, p_page: page, p_page_size: pageSize
-    });
+    const args = { p_search: search, p_page: page, p_page_size: pageSize };
+    // يُرسل فقط عند اختيار فلتر، فتبقى الصفحة تعمل قبل تشغيل admin-users-groups.sql.
+    if (workspace) args.p_workspace = workspace;
+    return rpc('admin_list_users', args);
+  }
+
+  async function activeWorkspaces() {
+    if (USE_MOCK) {
+      await wait(120);
+      const ids = new Set(MOCK_EVENTS.map((e) => e.workspace_id));
+      return MOCK_WORKSPACES.filter((w) => ids.has(w.id))
+        .sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+    }
+    return rpc('admin_list_active_workspaces');
   }
 
   async function activeEvents() {
@@ -554,7 +575,7 @@
 
   global.TamrinData = {
     signIn, signOut, restoreSession, isMock,
-    overview, users, activeEvents, eventDetails, pastEvents,
+    overview, users, activeWorkspaces, activeEvents, eventDetails, pastEvents,
     playerProfile, deleteRating
   };
 })(window);

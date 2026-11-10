@@ -101,7 +101,17 @@
   const PAGE_SIZE = 12;
   let page = 1;
   let search = '';
+  let workspace = '';   // '' الكل، 'active'، أو معرّف مجموعة
   let total = 0;
+
+  /* أسماء المجموعات. قبل تشغيل admin-users-groups.sql لا تأتي القائمة،
+     فيبقى العدد كما كان. */
+  function groupsCell(u) {
+    if (!Array.isArray(u.workspaces)) return `<span class="num">${num(u.workspace_count)}</span>`;
+    if (!u.workspaces.length) return '<span class="pay-none">—</span>';
+    return `<span class="groups">${u.workspaces
+      .map((w) => `<span class="tag tag-flat">${esc(w.name)}</span>`).join('')}</span>`;
+  }
 
   function userRow(u) {
     const pay = u.stc_pay_number
@@ -117,7 +127,7 @@
         </td>
         <td><span class="tag tag-flat">${esc(u.postion || '—')}</span></td>
         <td class="num">${pay}</td>
-        <td class="num">${num(u.workspace_count)}</td>
+        <td>${groupsCell(u)}</td>
         <td class="num">${asDate(u.created_at)}</td>
       </tr>`;
   }
@@ -126,13 +136,15 @@
     const body = $('usersBody');
     colspanRow(body, 5, '<span class="skel" style="width:180px;margin-inline:auto"></span>');
     try {
-      const res = await TamrinData.users({ search, page, pageSize: PAGE_SIZE });
+      const res = await TamrinData.users({ search, page, pageSize: PAGE_SIZE, workspace });
       total = res.total;
 
       if (!res.rows.length) {
         colspanRow(body, 5, search
           ? `<b>لا نتائج</b>لا يوجد مستخدم يطابق «${esc(search)}».`
-          : '<b>لا مستخدمين بعد</b>لم ينضم أحد حتى الآن.');
+          : workspace
+            ? '<b>لا نتائج</b>لا يوجد مستخدم في هذا الاختيار.'
+            : '<b>لا مستخدمين بعد</b>لم ينضم أحد حتى الآن.');
       } else {
         body.innerHTML = res.rows.map(userRow).join('');
       }
@@ -154,6 +166,22 @@
     const v = e.target.value;
     searchTimer = setTimeout(() => { search = v; page = 1; loadUsers(); }, 220);
   });
+
+  $('wsFilter').addEventListener('change', (e) => {
+    workspace = e.target.value; page = 1; loadUsers();
+  });
+
+  /* قائمة الفلتر: «الكل»، «في مجموعة نشطة»، ثم كل مجموعة نشطة باسمها.
+     لو فشل الجلب (مثلًا قبل تشغيل الـSQL) يبقى الخياران الأولان فقط. */
+  async function loadWorkspaceFilter() {
+    const sel = $('wsFilter');
+    try {
+      const list = await TamrinData.activeWorkspaces();
+      sel.querySelectorAll('option[data-ws]').forEach((o) => o.remove());
+      sel.insertAdjacentHTML('beforeend', list
+        .map((w) => `<option data-ws value="${esc(w.id)}">${esc(w.name)}</option>`).join(''));
+    } catch (e) { /* يبقى الخياران الأولان */ }
+  }
 
   /* اسم المستخدم يفتح ورقته. زرّ حقيقي: Enter و Space يعملان من نفسهما،
      والصفّ يبقى صفًّا في شجرة الوصول. */
@@ -321,6 +349,7 @@
   function loadAll() {
     loadStats();
     loadUsers();
+    loadWorkspaceFilter();
     loadEvents();
   }
 
